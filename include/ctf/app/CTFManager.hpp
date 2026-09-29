@@ -192,6 +192,7 @@ private:
 
     std::size_t nextTeamNumber_ = 1;
     std::size_t nextUserNumber_ = 1;
+    std::size_t nextChallengeNumber_ = 1;
     std::size_t nextSubmissionNumber_ = 1;
     std::size_t nextAnnouncementNumber_ = 1;
 };

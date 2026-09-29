@@ -180,6 +180,31 @@ TEST_CASE("State persists across a restart", "[app][manager][persistence]") {
     REQUIRE_NOTHROW(reloaded.login("alice", "password123"));  // password hash survived
 }
 
+TEST_CASE("Challenge ids do not collide after a restart", "[app][manager][persistence]") {
+    auto spec = [] {
+        ChallengeSpec s;
+        s.title = "Test";
+        s.basePoints = 100;
+        s.scoring = ScoringKind::Static;
+        s.flagType = FlagType::Static;
+        s.flag = "CTF{x}";
+        return s;
+    };
+    std::string dir;
+    {
+        auto h = makeHarness();
+        dir = h.dir;
+        auto admin = h.mgr->registerUser("admin", "admin@x.com", "password123");
+        REQUIRE(h.mgr->createChallenge(admin.me.id, spec()).id == "c_1");
+        REQUIRE(h.mgr->createChallenge(admin.me.id, spec()).id == "c_2");
+    }
+    CTFManager reloaded("test-secret", dir, std::make_unique<ctftest::FakeClock>());
+    reloaded.load();
+    auto admin = reloaded.login("admin", "password123");
+    // The next id must continue past the loaded challenges, not reset to c_1.
+    REQUIRE(reloaded.createChallenge(admin.me.id, spec()).id == "c_3");
+}
+
 TEST_CASE("Concurrent submissions are race-free and pick one first blood",
           "[app][manager][concurrency]") {
     auto h = makeHarness();

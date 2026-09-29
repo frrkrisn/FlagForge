@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <random>
 #include <utility>
 
@@ -837,7 +838,11 @@ std::vector<Announcement> CTFManager::announcements() const {
 ChallengeDetailDto CTFManager::createChallenge(const UserId& adminId, const ChallengeSpec& spec) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
     requireAdmin(adminId);
-    auto challenge = ChallengeFactory::create(spec);
+    // Assign a persistence-stable id here (Challenge's static counter resets per
+    // process and would collide with loaded challenges after a restart).
+    ChallengeSpec s = spec;
+    if (s.id.empty()) s.id = "c_" + std::to_string(nextChallengeNumber_++);
+    auto challenge = ChallengeFactory::create(s);
     const ChallengeId id = challenge->id();
     challenges_.add(std::move(challenge));
     try {
@@ -981,6 +986,7 @@ nlohmann::json CTFManager::toJson() const {
                         {"freezeAt", freezeAt_ ? json(toIso8601(*freezeAt_)) : json(nullptr)}};
     doc["counters"] = json{{"user", nextUserNumber_},
                            {"team", nextTeamNumber_},
+                           {"challenge", nextChallengeNumber_},
                            {"submission", nextSubmissionNumber_},
                            {"announcement", nextAnnouncementNumber_}};
 
@@ -1054,6 +1060,7 @@ void CTFManager::fromJson(const nlohmann::json& doc) {
     const json counters = doc.value("counters", json::object());
     nextUserNumber_ = counters.value("user", static_cast<std::size_t>(1));
     nextTeamNumber_ = counters.value("team", static_cast<std::size_t>(1));
+    nextChallengeNumber_ = counters.value("challenge", static_cast<std::size_t>(1));
     nextSubmissionNumber_ = counters.value("submission", static_cast<std::size_t>(1));
     nextAnnouncementNumber_ = counters.value("announcement", static_cast<std::size_t>(1));
 
@@ -1124,6 +1131,13 @@ void CTFManager::fromJson(const nlohmann::json& doc) {
 
     for (const json& jc : doc.value("challenges", json::array())) {
         challenges_.add(deserializeChallenge(jc));
+    }
+    // Safety net: never re-issue an existing "c_N" id after a restart.
+    for (const Challenge* c : challenges_.all()) {
+        if (c && c->id().rfind("c_", 0) == 0) {
+            const std::size_t n = std::strtoul(c->id().c_str() + 2, nullptr, 10);
+            nextChallengeNumber_ = std::max(nextChallengeNumber_, n + 1);
+        }
     }
 
     for (const json& js : doc.value("submissions", json::array())) {
