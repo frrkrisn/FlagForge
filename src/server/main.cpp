@@ -1,11 +1,8 @@
 // ctf_server — REST server entry point.
 //
-// Phase 0: a minimal, real httplib server that answers GET /api/health with the
-// standard success envelope and, if a web directory is supplied, serves it as a
-// static SPA. The full ApiRouter and every /api/... endpoint arrive in Phase 6.
-//
-// This is the ONLY layer permitted to do I/O / HTTP (CLAUDE.md rule #4). It holds
-// no game rules.
+// Wires the CTFManager (all game rules + state, thread-safe) to the ApiRouter (HTTP
+// boundary, no game rules), serves the built React app, and runs an httplib server
+// with a thread pool sized for many long-lived SSE streams.
 
 #include <atomic>
 #include <csignal>
@@ -13,22 +10,23 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <memory>
 #include <string>
 
 #include <httplib.h>
-#include <nlohmann/json.hpp>
 
 #include "ctf/Version.hpp"
+#include "ctf/app/CTFManager.hpp"
+#include "ctf/core/Crypto.hpp"
+#include "ctf/server/ApiRouter.hpp"
 
 namespace {
-
-using json = nlohmann::json;
 
 struct Options {
     int port = 8080;
     std::string dataDir = "data/runtime";
-    std::string webDir;         // empty -> API only
-    std::string secretFile;     // empty -> read CTF_SERVER_SECRET or generate
+    std::string webDir;
+    std::string secretFile;
 };
 
 Options parseArgs(int argc, char** argv) {
@@ -62,44 +60,55 @@ Options parseArgs(int argc, char** argv) {
     return opt;
 }
 
-// Success envelope: { "ok": true, "data": ... }  (docs/PLAYBOOK.md §7).
-json ok(json data) {
-    return json{{"ok", true}, {"data", std::move(data)}};
+// Server secret for per-team dynamic flags: file, then env, then a generated one.
+std::string loadServerSecret(const Options& opt) {
+    if (!opt.secretFile.empty()) {
+        std::ifstream in(opt.secretFile, std::ios::binary);
+        if (in) {
+            std::string secret((std::istreambuf_iterator<char>(in)),
+                               std::istreambuf_iterator<char>());
+            while (!secret.empty() && (secret.back() == '\n' || secret.back() == '\r')) {
+                secret.pop_back();
+            }
+            if (!secret.empty()) return secret;
+        }
+        std::cerr << "warning: could not read secret file " << opt.secretFile << "\n";
+    }
+    if (const char* env = std::getenv("CTF_SERVER_SECRET"); env && *env) {
+        return env;
+    }
+    std::cerr << "warning: no server secret provided; generating an ephemeral one "
+                 "(dynamic flags change on restart). Use --secret-file for stability.\n";
+    return ctf::crypto::randomToken(32);
 }
 
 std::atomic<httplib::Server*> g_server{nullptr};
-
 void handleSignal(int) {
-    if (auto* srv = g_server.load()) {
-        srv->stop();
-    }
+    if (auto* srv = g_server.load()) srv->stop();
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
     const Options opt = parseArgs(argc, argv);
+    const std::string secret = loadServerSecret(opt);
+
+    ctf::app::CTFManager manager(secret, opt.dataDir);
+    manager.load();
 
     httplib::Server server;
-    g_server.store(&server);
-    std::signal(SIGINT, handleSignal);
-    std::signal(SIGTERM, handleSignal);
+    // Size the pool for many concurrent long-lived SSE streams (PLAYBOOK §6 / Prompt 6).
+    server.new_task_queue = [] { return new httplib::ThreadPool(64); };
 
-    server.Get("/api/health", [](const httplib::Request&, httplib::Response& res) {
-        res.set_content(
-            ok(json{{"status", "up"}, {"version", ctf::version()}}).dump(),
-            "application/json");
-    });
+    ctf::server::ApiRouter router(manager);
+    router.registerRoutes(server);
 
-    // Optional static frontend (production: ctf_server serves frontend/dist).
+    // Serve the built React app (production) with SPA fallback.
     if (!opt.webDir.empty()) {
         if (server.set_mount_point("/", opt.webDir)) {
-            // SPA fallback: any non-/api route that isn't a real file -> index.html.
             server.set_file_request_handler(
                 [&opt](const httplib::Request& req, httplib::Response& res) {
-                    if (req.path.rfind("/api/", 0) == 0) {
-                        return;  // let the 404 stand for unknown API routes
-                    }
+                    if (req.path.rfind("/api/", 0) == 0) return;
                     std::ifstream index(opt.webDir + "/index.html", std::ios::binary);
                     if (index) {
                         std::string body((std::istreambuf_iterator<char>(index)),
@@ -112,8 +121,12 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::cout << "ctf_server " << ctf::version() << " listening on http://localhost:"
-              << opt.port << "  (data=" << opt.dataDir
+    g_server.store(&server);
+    std::signal(SIGINT, handleSignal);
+    std::signal(SIGTERM, handleSignal);
+
+    std::cout << "ctf_server " << ctf::version() << " listening on http://localhost:" << opt.port
+              << "  (data=" << opt.dataDir
               << (opt.webDir.empty() ? ", api-only" : ", web=" + opt.webDir) << ")\n";
 
     if (!server.listen("0.0.0.0", opt.port)) {
