@@ -66,8 +66,21 @@ A convenience script builds both:
 
 ## Admin account
 
-The admin is either **the first user that registers** or a user created by the seed script with
-the admin role. See `docs/PLAYBOOK.md` §7. (Seed script arrives in Phase 8.)
+The admin is **the first user that registers** (or the admin created by the seed script). See
+`docs/PLAYBOOK.md` §7.
+
+## Seed a demo event
+
+With the backend running on `:8080` (and an **empty** data dir, so the first user becomes admin),
+populate a realistic event — 10 challenges, 12 teams with players, a spread of solves and first
+bloods, a costed hint and a flag-sharing alert — entirely through the real API:
+
+```bash
+node scripts/seed.mjs http://localhost:8080
+```
+
+Then open the app. Log in as `admin` / `adminpassword`, or any team captain (e.g. `nullpoin1` /
+`password123`). Re-running requires a fresh data dir (delete `data/runtime/state.json`).
 
 ## Project status
 
