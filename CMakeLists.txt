@@ -95,7 +95,8 @@ file(GLOB_RECURSE CTF_CORE_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/core/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/scoring/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/events/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/persistence/*.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/persistence/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/app/*.cpp)
 
 add_library(ctf_core STATIC ${CTF_CORE_SOURCES})
 target_include_directories(ctf_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
