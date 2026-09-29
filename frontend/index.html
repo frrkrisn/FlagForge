@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
     <title>FlagForge</title>
+    <meta
+      name="description"
+      content="FlagForge — a Capture-The-Flag competition platform with a live leaderboard, dynamic scoring and a themeable hacker-terminal interface."
+    />
+    <!-- No flash of the wrong theme: apply saved prefs before first paint. -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('ctf.theme.v1');
+          var t = raw ? JSON.parse(raw) : {};
+          var root = document.documentElement;
+          root.dataset.theme = t.preset || 'matrix';
+          root.dataset.effects = t.effects && t.effects.glow === false ? 'off' : 'on';
+          root.dataset.motion = t.effects && t.effects.motion === false ? 'off' : 'on';
+          if (t.accent) root.style.setProperty('--accent', t.accent);
+          var fonts = {
+            jetbrains: "'JetBrains Mono', ui-monospace, monospace",
+            fira: "'Fira Code', ui-monospace, monospace",
+            ibm: "'IBM Plex Mono', ui-monospace, monospace",
+          };
+          if (t.font && fonts[t.font]) root.style.setProperty('--font-mono', fonts[t.font]);
+          var sizes = { sm: '14px', md: '16px', lg: '18px' };
+          if (t.size && sizes[t.size]) root.style.fontSize = sizes[t.size];
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

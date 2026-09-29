@@ -1,0 +1,315 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================================================
+   Theme tokens. Every color the UI uses is a CSS variable, switched by
+   data-theme="<preset>" on <html>. A custom accent overrides --accent inline.
+   =========================================================================== */
+:root,
+:root[data-theme='matrix'] {
+  --bg: #070b08;
+  --panel: #0c130e;
+  --overlay: #10190f;
+  --border: #1c3325;
+  --border-strong: #2c4d38;
+  --fg: #c9f7d8;
+  --fg-muted: #6f8f7c;
+  --accent: #00ff88;
+  --accent-fg: #04140b;
+  --accent-dim: #00b361;
+  --selection: #003f22;
+  --focus-ring: #00ff88;
+  --success: #00ff88;
+  --warning: #ffcc44;
+  --danger: #ff5f56;
+  --info: #4fd0ff;
+
+  --cat-web: #4f9dff;
+  --cat-crypto: #b57bff;
+  --cat-forensics: #ffb347;
+  --cat-reverse: #ff6b6b;
+  --cat-pwn: #ff7bd0;
+  --cat-misc: #8aa2b2;
+
+  --chart-1: #00ff88;
+  --chart-2: #4f9dff;
+  --chart-3: #ffb347;
+  --chart-4: #b57bff;
+  --chart-5: #ff7bd0;
+  --chart-6: #4fd0ff;
+
+  --glow-blur: 14px;
+  --glow-alpha: 42%;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  --font-sans: 'JetBrains Mono', ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+:root[data-theme='cyber'] {
+  --bg: #060b10;
+  --panel: #0a121b;
+  --overlay: #0d1826;
+  --border: #16324a;
+  --border-strong: #234b6b;
+  --fg: #d0f4ff;
+  --fg-muted: #6f93a6;
+  --accent: #00e5ff;
+  --accent-fg: #021016;
+  --accent-dim: #009fb3;
+  --selection: #003847;
+  --focus-ring: #00e5ff;
+}
+
+:root[data-theme='amber'] {
+  --bg: #0d0a04;
+  --panel: #15100722;
+  --panel: #161006;
+  --overlay: #1c1408;
+  --border: #3a2c10;
+  --border-strong: #5a4418;
+  --fg: #ffe2a8;
+  --fg-muted: #a78a5c;
+  --accent: #ffb000;
+  --accent-fg: #1a1200;
+  --accent-dim: #b37c00;
+  --selection: #3f2e00;
+  --focus-ring: #ffb000;
+  --glow-alpha: 55%;
+}
+
+:root[data-theme='synthwave'] {
+  --bg: #0d0714;
+  --panel: #150c22;
+  --overlay: #1c1030;
+  --border: #351a4d;
+  --border-strong: #4d2670;
+  --fg: #f3d9ff;
+  --fg-muted: #9a7ab0;
+  --accent: #ff2bd6;
+  --accent-fg: #180418;
+  --accent-dim: #b31d96;
+  --selection: #3f0038;
+  --focus-ring: #ff2bd6;
+  --info: #00e5ff;
+  --chart-2: #00e5ff;
+}
+
+:root[data-theme='blood'] {
+  --bg: #0d0505;
+  --panel: #150808;
+  --overlay: #1c0a0a;
+  --border: #3a1616;
+  --border-strong: #5a2020;
+  --fg: #ffd6d6;
+  --fg-muted: #a76c6c;
+  --accent: #ff3b3b;
+  --accent-fg: #180404;
+  --accent-dim: #b32020;
+  --selection: #3f0000;
+  --focus-ring: #ff3b3b;
+}
+
+:root[data-theme='ghost'] {
+  --bg: #0a0a0a;
+  --panel: #121212;
+  --overlay: #181818;
+  --border: #2a2a2a;
+  --border-strong: #3d3d3d;
+  --fg: #d4d4d4;
+  --fg-muted: #7d7d7d;
+  --accent: #e6e6e6;
+  --accent-fg: #0a0a0a;
+  --accent-dim: #9a9a9a;
+  --selection: #2a2a2a;
+  --focus-ring: #e6e6e6;
+  /* Grayscale categories — meaning carried by icon + label + pattern, not color. */
+  --cat-web: #b8b8b8;
+  --cat-crypto: #9a9a9a;
+  --cat-forensics: #cfcfcf;
+  --cat-reverse: #7d7d7d;
+  --cat-pwn: #e0e0e0;
+  --cat-misc: #8a8a8a;
+  --chart-1: #e6e6e6;
+  --chart-2: #a8a8a8;
+  --chart-3: #cccccc;
+  --chart-4: #888888;
+  --chart-5: #dddddd;
+  --chart-6: #999999;
+  --glow-alpha: 0%;
+}
+
+:root[data-theme='paper'] {
+  --bg: #f4f1e8;
+  --panel: #fbf9f2;
+  --overlay: #efece1;
+  --border: #d8d2c2;
+  --border-strong: #bcb4a0;
+  --fg: #1a1a1a;
+  --fg-muted: #5f5a4e;
+  --accent: #0a7a3d;
+  --accent-fg: #ffffff;
+  --accent-dim: #0a5c2e;
+  --selection: #cfe6d6;
+  --focus-ring: #0a7a3d;
+  --success: #0a7a3d;
+  --warning: #a06600;
+  --danger: #b3261e;
+  --info: #0b5aa0;
+  --cat-web: #0b5aa0;
+  --cat-crypto: #6a3db3;
+  --cat-forensics: #a06600;
+  --cat-reverse: #b3261e;
+  --cat-pwn: #a01e6a;
+  --cat-misc: #5a6672;
+  --chart-1: #0a7a3d;
+  --chart-2: #0b5aa0;
+  --chart-3: #a06600;
+  --chart-4: #6a3db3;
+  --chart-5: #a01e6a;
+  --chart-6: #0b8a8a;
+  --glow-alpha: 0%;
+  color-scheme: light;
+}
+
+/* Effects master switch: [data-effects='off'] zeroes glow. */
+:root[data-effects='off'] {
+  --glow-alpha: 0%;
+}
+
+/* ===========================================================================
+   Base
+   =========================================================================== */
+* {
+  border-color: var(--border);
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-feature-settings: 'liga' 0;
+  -webkit-font-smoothing: antialiased;
+}
+::selection {
+  background: var(--selection);
+  color: var(--fg);
+}
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--panel);
+}
+
+/* Glow utility (opt-in). Disabled when --glow-alpha is 0. */
+.glow-text {
+  text-shadow: 0 0 var(--glow-blur) color-mix(in srgb, var(--accent) var(--glow-alpha), transparent);
+}
+.glow-box {
+  box-shadow: 0 0 var(--glow-blur) color-mix(in srgb, var(--accent) var(--glow-alpha), transparent);
+}
+
+/* Blinking block cursor for prompt headings/inputs. */
+.cursor::after {
+  content: '▊';
+  margin-left: 2px;
+  color: var(--accent);
+  animation: blink 1s steps(1) infinite;
+}
+
+/* Terminal window chrome. */
+.term-window {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.term-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.term-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Scanlines + vignette overlays (rendered by the app, toggled by effects). */
+.fx-scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2px,
+    rgba(0, 0, 0, 0.16) 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+.fx-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 49;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.45) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::after,
+:root[data-motion='off'] *::before {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Markdown (react-markdown + typography plugin) tuned to tokens. */
+.prose {
+  color: var(--fg);
+  max-width: none;
+}
+.prose :where(h1, h2, h3, h4, strong) {
+  color: var(--fg);
+}
+.prose :where(a) {
+  color: var(--accent);
+}
+.prose :where(code) {
+  color: var(--accent);
+  background: var(--overlay);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.prose :where(pre) {
+  background: var(--overlay);
+  border: 1px solid var(--border);
+}
