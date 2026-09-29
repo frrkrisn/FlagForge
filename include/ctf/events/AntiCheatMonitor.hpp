@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "ctf/events/Event.hpp"
@@ -39,8 +40,15 @@ class AntiCheatMonitor final : public IEventObserver {
 public:
     static constexpr int kBurstMax = 20;                  ///< submissions per team...
     static constexpr std::chrono::seconds kBurstWindow{60};  ///< ...per minute → burst
+    static constexpr int kSameWrongFlagTeams = 3;         ///< distinct teams → shared-flag alert
 
     void onEvent(const Event& event) override;
+
+    /// Record a wrong flag (as a hash, never the plaintext) so that the same wrong flag
+    /// coming from kSameWrongFlagTeams distinct teams on one challenge raises an alert.
+    /// Called directly by CTFManager so events remain flag-free.
+    void noteWrongFlag(const TeamId& teamId, const ChallengeId& challengeId,
+                       const std::string& wrongFlagHash, TimePoint at);
 
     std::vector<Alert> alerts() const { return alerts_; }
     std::vector<Alert> openAlerts() const;
@@ -54,6 +62,9 @@ private:
     long long nextAlertId_ = 1;
     // sliding window of submission timestamps per team (burst detection)
     std::unordered_map<TeamId, std::deque<TimePoint>> submissionTimes_;
+    // challengeId + ":" + wrongFlagHash  ->  distinct teams that submitted it
+    std::unordered_map<std::string, std::unordered_set<TeamId>> wrongFlagTeams_;
+    std::unordered_set<std::string> sameWrongFlagAlerted_;  // keys already alerted (dedup)
 };
 
 }  // namespace ctf::events
