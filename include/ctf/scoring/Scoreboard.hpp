@@ -67,8 +67,14 @@ public:
                                        int topN, TimePoint now) const;
 
     /// Score of one team as of \p at (sum of current challenge values for its solves,
-    /// plus first-blood bonuses, minus hint costs). Public for unit testing.
-    int scoreOf(const Team& team, const ChallengeView& challenges, TimePoint at) const;
+    /// plus first-blood bonuses, minus hint costs). Needs \p allTeams because a
+    /// challenge's decayed value depends on how many teams have solved it. Public for
+    /// unit testing.
+    int scoreOf(const Team& team, const TeamView& allTeams, const ChallengeView& challenges,
+                TimePoint at) const;
+
+    /// Per-challenge solve counts as of \p at (how many teams have solved each).
+    std::unordered_map<ChallengeId, int> solveCounts(const TeamView& teams, TimePoint at) const;
 
 private:
     std::unordered_map<TeamId, int> previousRanks_;
