@@ -12,6 +12,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Some FetchContent dependencies (nlohmann/json, picosha2) still declare a
+# cmake_minimum_required below 3.5, which CMake 4.0+ rejects. Raise the floor for
+# those sub-projects so a plain `cmake -S . -B build` works on modern CMake.
+if(NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif()
+
 # Put all binaries in build/bin and build/lib so paths are predictable.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -73,9 +80,8 @@ FetchContent_Declare(picosha2
 
 FetchContent_MakeAvailable(nlohmann_json httplib picosha2)
 
-# picosha2 ships no CMake target; expose its include dir ourselves.
-add_library(picosha2 INTERFACE)
-target_include_directories(picosha2 INTERFACE ${picosha2_SOURCE_DIR})
+# picosha2 provides its own INTERFACE target `picosha2` (carrying its include dir),
+# so we just link it below — no wrapper needed.
 
 # Catch2 v3 (tests only) ---------------------------------------------------
 if(CTF_BUILD_TESTS)
