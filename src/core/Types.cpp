@@ -153,4 +153,15 @@ Severity severityFromString(const std::string& s) {
     throw ValidationException("Unknown severity: " + s);
 }
 
+SubmitResult submitResultFromString(const std::string& s) {
+    if (s == "CORRECT") return SubmitResult::Correct;
+    if (s == "WRONG") return SubmitResult::Wrong;
+    if (s == "ALREADY_SOLVED") return SubmitResult::AlreadySolved;
+    if (s == "LOCKED") return SubmitResult::Locked;
+    if (s == "COOLDOWN") return SubmitResult::Cooldown;
+    if (s == "CLOSED") return SubmitResult::Closed;
+    if (s == "FLAG_SHARING") return SubmitResult::FlagSharing;
+    throw ValidationException("Unknown submit result: " + s);
+}
+
 }  // namespace ctf

@@ -66,6 +66,7 @@ Role roleFromString(const std::string& s);
 Category categoryFromString(const std::string& s);
 Difficulty difficultyFromString(const std::string& s);
 Severity severityFromString(const std::string& s);
+SubmitResult submitResultFromString(const std::string& s);
 
 }  // namespace ctf
 

@@ -70,6 +70,10 @@ public:
     void setDifficulty(Difficulty d) noexcept { difficulty_ = d; }
     void setVisible(bool v) noexcept { visible_ = v; }
     void setScoringParams(int minPoints, int decay);
+    /// Informational label for the scoring strategy (e.g. "DECAY_FIRSTBLOOD"), set by
+    /// the factory and surfaced in the API; does not affect the owned strategy object.
+    void setScoringTag(std::string tag) { scoringTag_ = std::move(tag); }
+    const std::string& scoringTag() const noexcept { return scoringTag_; }
     void setPrerequisites(std::vector<ChallengeId> prereqs) { prerequisites_ = std::move(prereqs); }
     void addHint(Hint hint) { hints_.push_back(std::move(hint)); }
     void addAttachment(Attachment a) { attachments_.push_back(std::move(a)); }
@@ -91,6 +95,7 @@ protected:
     int basePoints_;
     int minPoints_;
     int decay_ = 10;
+    std::string scoringTag_ = "DECAY";
     std::vector<ChallengeId> prerequisites_;
     std::vector<Hint> hints_;
     std::vector<Attachment> attachments_;
@@ -110,6 +115,10 @@ public:
 
     bool checkFlag(const FlagCheckContext& ctx, const std::string& input) const override;
     const char* typeTag() const noexcept override { return "STATIC"; }
+
+    /// The stored SHA-256 hash (never the plaintext). Server-side only — never placed
+    /// in an API response.
+    const std::string& flagHash() const noexcept { return flagHash_; }
 
 private:
     std::string flagHash_;  // SHA-256 hex; never the plaintext
@@ -145,6 +154,9 @@ public:
 
     bool checkFlag(const FlagCheckContext& ctx, const std::string& input) const override;
     const char* typeTag() const noexcept override { return "MULTI"; }
+
+    /// The stored SHA-256 hashes (never plaintext). Server-side only.
+    const std::vector<std::string>& flagHashes() const noexcept { return flagHashes_; }
 
 private:
     std::vector<std::string> flagHashes_;

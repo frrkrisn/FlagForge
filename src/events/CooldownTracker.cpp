@@ -46,6 +46,22 @@ bool CooldownTracker::recordWrong(const TeamId& teamId, const ChallengeId& chall
     return false;
 }
 
+int CooldownTracker::recentWrongCount(const TeamId& teamId, const ChallengeId& challengeId,
+                                      TimePoint now) const {
+    auto it = state_.find(Key{teamId, challengeId});
+    if (it == state_.end()) {
+        return 0;
+    }
+    const TimePoint cutoff = now - kWindow;
+    int count = 0;
+    for (const TimePoint& t : it->second.wrongTimes) {
+        if (t >= cutoff) {
+            ++count;
+        }
+    }
+    return count;
+}
+
 void CooldownTracker::clear(const TeamId& teamId, const ChallengeId& challengeId) {
     state_.erase(Key{teamId, challengeId});
 }

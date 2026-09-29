@@ -14,11 +14,15 @@
 #include <string>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include "ctf/app/Dtos.hpp"
 #include "ctf/app/SessionManager.hpp"
+#include "ctf/core/Announcement.hpp"
 #include "ctf/core/Challenge.hpp"
 #include "ctf/core/ChallengeFactory.hpp"
 #include "ctf/core/Clock.hpp"
+#include "ctf/core/Submission.hpp"
 #include "ctf/core/Team.hpp"
 #include "ctf/core/Types.hpp"
 #include "ctf/core/User.hpp"
@@ -130,8 +134,20 @@ private:
     void requireAdmin(const UserId& userId) const;
     void requireRunning() const;
     const Team& requireTeamOf(const UserId& userId) const;
+    Team& requireTeamOfMutable(const UserId& userId);
     int solveCountOf(const ChallengeId& challengeId) const;
     bool frozenNow() const;
+    void publishEvent(events::EventType type, std::string message,
+                      std::optional<TeamId> teamId = std::nullopt,
+                      std::optional<ChallengeId> challengeId = std::nullopt,
+                      std::optional<TeamId> otherTeamId = std::nullopt, int points = 0);
+    void refreshScoreboard();  ///< recompute the cached live board (unique lock only)
+    void persistLocked() const;               ///< write state (assumes lock held)
+    EventStatusDto eventStatusLocked() const; ///< build status (assumes lock held)
+    ChallengeDetailDto detailForAdmin(const UserId& adminId,
+                                      const ChallengeId& challengeId) const;
+    nlohmann::json toJson() const;
+    void fromJson(const nlohmann::json& doc);
 
     // Assemble borrowed views for the Scoreboard under the current lock.
     scoring::TeamView teamView() const;
@@ -163,6 +179,7 @@ private:
     events::CooldownTracker cooldown_;
 
     mutable scoring::Scoreboard scoreboard_;
+    std::vector<scoring::RankRow> lastLiveBoard_;  ///< cached live board (deltas), unique-lock updated
 
     app::SessionManager sessions_;
 

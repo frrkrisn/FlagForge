@@ -77,6 +77,7 @@ public:
 
     int personalSolves() const noexcept { return personalSolves_; }
     void incrementSolves() noexcept { ++personalSolves_; }
+    void setPersonalSolves(int n) noexcept { personalSolves_ = n; }  // for persistence restore
 
 private:
     std::optional<TeamId> teamId_;

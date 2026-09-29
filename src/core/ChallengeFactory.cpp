@@ -93,6 +93,7 @@ std::unique_ptr<Challenge> ChallengeFactory::create(const ChallengeSpec& spec) {
 
     challenge->setDescription(spec.description);
     challenge->setScoringParams(spec.minPoints, spec.decay);
+    challenge->setScoringTag(toString(spec.scoring));
     challenge->setVisible(spec.visible);
     challenge->setPrerequisites(spec.prerequisites);
     for (std::size_t i = 0; i < spec.hints.size(); ++i) {

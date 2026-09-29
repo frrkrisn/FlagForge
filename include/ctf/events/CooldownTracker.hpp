@@ -29,6 +29,10 @@ public:
     /// Record a wrong attempt. Returns true if this attempt *triggered* a new cooldown.
     bool recordWrong(const TeamId& teamId, const ChallengeId& challengeId, TimePoint now);
 
+    /// Number of wrong attempts still within the sliding window at \p now (0 if none).
+    int recentWrongCount(const TeamId& teamId, const ChallengeId& challengeId,
+                         TimePoint now) const;
+
     /// Clear state for a (team, challenge) — e.g. after a correct solve.
     void clear(const TeamId& teamId, const ChallengeId& challengeId);
 
