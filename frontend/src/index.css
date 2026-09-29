@@ -1,0 +1,71 @@
+/* Phase 0 placeholder styling. The full theme-token design system (7 presets,
+   custom accent, effects) is built in Prompt 7a and replaces this file. */
+:root {
+  --bg: #070b08;
+  --fg: #c9f7d8;
+  --accent: #00ff88;
+  --muted: #6f8f7c;
+  --fail: #ff5f56;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Courier New', monospace;
+  display: grid;
+  place-items: center;
+}
+
+.shell {
+  padding: 2rem;
+  text-align: center;
+  max-width: 720px;
+}
+
+.wordmark {
+  color: var(--accent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--accent) 45%, transparent);
+  font-size: clamp(8px, 2.2vw, 14px);
+  line-height: 1.15;
+  margin: 0 auto 1rem;
+  overflow-x: auto;
+}
+
+.tagline {
+  color: var(--fg);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.health {
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.ok {
+  color: var(--accent);
+}
+.fail {
+  color: var(--fail);
+}
+.muted {
+  color: var(--muted);
+}
+
+.foot {
+  margin-top: 2rem;
+  font-size: 0.75rem;
+}
