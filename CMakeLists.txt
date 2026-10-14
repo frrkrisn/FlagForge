@@ -54,6 +54,14 @@ if(CTF_ENABLE_TSAN AND NOT MSVC)
     target_link_options(ctf_sanitizers INTERFACE -fsanitize=thread)
 endif()
 
+# Static runtime: on MinGW/GCC, link libstdc++/libgcc/winpthread statically so the
+# executables are self-contained .exe files that need no MinGW DLLs on PATH. (Disabled
+# under sanitizers, which require their shared runtimes.)
+add_library(ctf_static_runtime INTERFACE)
+if(MINGW AND NOT CTF_ENABLE_ASAN AND NOT CTF_ENABLE_TSAN)
+    target_link_options(ctf_static_runtime INTERFACE -static -static-libgcc -static-libstdc++)
+endif()
+
 # ---------------------------------------------------------------------------
 # Third-party dependencies via FetchContent (no manual installs)
 # ---------------------------------------------------------------------------
@@ -120,7 +128,7 @@ file(GLOB_RECURSE CTF_SERVER_SOURCES CONFIGURE_DEPENDS
 add_executable(ctf_server ${CTF_SERVER_SOURCES})
 target_link_libraries(ctf_server
     PRIVATE ctf_core httplib::httplib nlohmann_json::nlohmann_json
-            ctf_warnings ctf_sanitizers)
+            ctf_warnings ctf_sanitizers ctf_static_runtime)
 
 # httplib needs sockets + threads.
 find_package(Threads REQUIRED)
@@ -140,7 +148,7 @@ if(CTF_BUILD_TESTS)
     add_executable(ctf_tests ${CTF_TEST_SOURCES})
     target_link_libraries(ctf_tests
         PRIVATE ctf_core Catch2::Catch2WithMain
-                ctf_warnings ctf_sanitizers)
+                ctf_warnings ctf_sanitizers ctf_static_runtime)
     target_include_directories(ctf_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
     list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
