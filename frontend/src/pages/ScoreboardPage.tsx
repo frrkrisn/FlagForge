@@ -136,7 +136,12 @@ export default function ScoreboardPage() {
         <Prompt cursor className="text-3xl">
           top --live
         </Prompt>
-        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="search team" className="h-8 w-48" />
+        <div className="flex items-center gap-3">
+          <Link to="/projector" className="rounded-full bg-panel px-4 py-1.5 text-xs text-fg-muted shadow-nm-raised-sm hover:text-accent">
+            projector mode
+          </Link>
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="search team" className="h-8 w-48" />
+        </div>
       </div>
 
       {data?.frozen && (

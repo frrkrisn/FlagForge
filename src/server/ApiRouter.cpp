@@ -77,6 +77,10 @@ json toJson(const std::vector<SkillDto>& skills) {
     return a;
 }
 
+/// Suspected flag sharing names teams as cheaters; it belongs in the admin alerts, not on a
+/// feed that anyone (or a projector) can read.
+bool isPublicFeedEvent(const events::Event& e) { return e.type != events::EventType::FlagSharing; }
+
 json toJson(const UserPublicDto& u) {
     return json{{"id", u.id},
                 {"username", u.username},
@@ -520,7 +524,9 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
             long long since = 0;
             if (req.has_param("since")) since = std::stoll(req.get_param_value("since"));
             json events = json::array();
-            for (const auto& e : mgr.feedSince(since)) events.push_back(toJson(e));
+            for (const auto& e : mgr.feedSince(since)) {
+                if (isPublicFeedEvent(e)) events.push_back(toJson(e));
+            }
             return json{{"events", events}, {"nextSince", mgr.latestFeedId()}};
         });
     });
@@ -692,6 +698,7 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
                 while (true) {
                     const auto events = mgr.feedSince(lastId);
                     for (const auto& e : events) {
+                        if (!isPublicFeedEvent(e)) continue;
                         if (!send("feed", toJson(e))) return false;
                     }
                     if (!events.empty()) {

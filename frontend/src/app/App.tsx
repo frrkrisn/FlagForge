@@ -14,6 +14,7 @@ const TeamPage = lazy(() => import('../pages/TeamPage'));
 const Rules = lazy(() => import('../pages/Rules'));
 const Admin = lazy(() => import('../pages/Admin'));
 const Profile = lazy(() => import('../pages/Profile'));
+const Projector = lazy(() => import('../pages/Projector'));
 const NotFound = lazy(() => import('../pages/NotFound'));
 
 function Fallback() {
@@ -32,6 +33,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/projector" element={<Projector />} />
             <Route element={<Layout />}>
               <Route path="/" element={<Landing />} />
               <Route path="/challenges" element={<Challenges />} />
