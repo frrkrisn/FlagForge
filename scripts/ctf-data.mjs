@@ -3,7 +3,12 @@
 // ORDER MATTERS: CHALLENGES is topologically sorted (every prerequisite appears before
 // the challenge that needs it), and SOLVE_ORDER reuses that same order.
 
-export const CHALLENGES = [
+import { fileURLToPath } from 'node:url';
+import { loadPacks, topoSort } from './lib/packs.mjs';
+
+// Text-only challenges. A challenge pack under challenges/ with the same key replaces the
+// entry here (that is how a challenge gets real files); packs with new keys are added.
+const TEXT_CHALLENGES = [
   { key: 'welcome', title: 'Welcome Flag', category: 'MISC', difficulty: 'EASY', basePoints: 50, strategy: 'STATIC', flagType: 'STATIC', flag: 'CTF{welcome_to_flagforge}', description: 'Every good CTF starts with a freebie. The flag is right here: `CTF{welcome_to_flagforge}`. Paste it below.' },
   { key: 'emoji', title: 'Emoji Cipher', category: 'MISC', difficulty: 'EASY', basePoints: 80, strategy: 'DECAY', flagType: 'STATIC', flag: 'CTF{emoji_are_just_unicode}', description: '## Emoji Cipher\nA friend sent you this and swears it is a message:\n\n```\n🏴 🔤 🔑 🧩 🔓\n```\n\nEvery symbol is just a **code point** wearing a costume. Strip the costume.' },
   { key: 'trivia', title: 'Trivia Night', category: 'MISC', difficulty: 'EASY', basePoints: 60, strategy: 'DECAY', flagType: 'STATIC', flag: 'CTF{there_are_8_bits_in_a_byte}', hints: [{ text: 'The answer is a very small number. Think binary.', cost: 10 }], description: '## Trivia Night\nHow many **bits** make up a byte? Wrap the full sentence in the flag format, using underscores for spaces: `CTF{there_are_?_bits_in_a_byte}`.' },
@@ -31,6 +36,14 @@ export const CHALLENGES = [
   { key: 'ret2win', title: 'Return Home', category: 'PWN', difficulty: 'HARD', basePoints: 500, strategy: 'DECAY_FIRSTBLOOD', flagType: 'STATIC', flag: 'CTF{ret2win_complete}', prereqKey: ['overflow'], hints: [{ text: 'There is already a win() function. You only need its address.', cost: 50 }], description: '## Return Home\nNo shellcode, no tricks: the binary contains a function called `win()` that nobody calls. **Make the program return into it.**' },
   { key: 'boss', title: 'Final Boss', category: 'MISC', difficulty: 'HARD', basePoints: 500, strategy: 'DYNAMIC_FIRSTBLOOD', flagType: 'DYNAMIC', flagPrefix: 'CTF', prereqKey: ['token', 'overflow'], description: '## Final Boss\nEverything you have learned, combined. A **per-team** flag guards the summit.' },
 ];
+
+export const PACKS = loadPacks(fileURLToPath(new URL('../challenges/', import.meta.url)));
+
+const merged = TEXT_CHALLENGES.map((c) => PACKS.find((p) => p.key === c.key) ?? c);
+for (const p of PACKS) if (!merged.includes(p)) merged.push(p);
+
+/** Every challenge (text-only and pack-based), with prerequisites always before dependents. */
+export const CHALLENGES = topoSort(merged);
 
 export const SOLVE_ORDER = CHALLENGES.map((c) => c.key);
 

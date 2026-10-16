@@ -2,9 +2,10 @@
 // FlagForge seed script (idempotent: safe to re-run, it EXTENDS an existing event).
 //
 // Populates a running server through the real REST API, so hashing, scoring, first-blood
-// and anti-cheat all run server-side. It creates the admin (or logs in if one exists),
-// the 26 challenges and 30 teams from scripts/ctf-data.mjs, then simulates a believable
-// spread of solves, wrong attempts and hint unlocks.
+// and anti-cheat all run server-side. It creates the admin (or logs in if one exists), the
+// challenges (text-only ones from scripts/ctf-data.mjs plus every pack under challenges/,
+// with their files) and 30 teams, then simulates a believable spread of solves, wrong
+// attempts and hint unlocks.
 //
 //   node scripts/seed.mjs [http://localhost:8080] [--alerts]
 //
@@ -12,45 +13,17 @@
 // Node 18+ (global fetch). No dependencies.
 
 import { CHALLENGES, SOLVE_COUNTS, SOLVE_ORDER, TEAMS, slug } from './ctf-data.mjs';
+import { DECAY, createClient, syncChallenge } from './lib/api.mjs';
 
 const args = process.argv.slice(2);
 const BASE = (args.find((a) => a.startsWith('http')) || process.env.FF_BASE || 'http://localhost:8080').replace(/\/$/, '');
 const WITH_ALERTS = args.includes('--alerts');
 
-function makeActor(name) {
-  return { name, cookie: '' };
-}
-
-async function req(actor, method, path, body) {
-  const res = await fetch(`${BASE}/api${path}`, {
-    method,
-    headers: { 'Content-Type': 'application/json', ...(actor.cookie ? { Cookie: actor.cookie } : {}) },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  const setCookie = res.headers.get('set-cookie');
-  if (setCookie) {
-    const m = /session=([^;]+)/.exec(setCookie);
-    if (m) actor.cookie = `session=${m[1]}`;
-  }
-  const json = await res.json().catch(() => ({ ok: false, error: { message: 'bad json' } }));
-  if (!json.ok) throw new Error(`${method} ${path} -> ${res.status} ${json.error?.code}: ${json.error?.message}`);
-  return json.data;
-}
+const client = createClient(BASE);
+const { req, ensureUser } = client;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-
-/** Register, or log in if the account already exists. Returns the actor. */
-async function ensureUser(name, username, email, password) {
-  const actor = makeActor(name);
-  try {
-    await req(actor, 'POST', '/auth/register', { username, email, password });
-  } catch (e) {
-    if (!/CONFLICT/.test(e.message)) throw e;
-    await req(actor, 'POST', '/auth/login', { username, password });
-  }
-  return actor;
-}
 
 async function main() {
   console.log(`Seeding ${BASE} ...`);
@@ -59,43 +32,30 @@ async function main() {
   const admin = await ensureUser('admin', 'admin', 'admin@flagforge.ctf', 'adminpassword');
   console.log('  [+] admin ready');
 
-  // 2) Challenges (skip titles that already exist)
-  const existing = await req(admin, 'GET', '/challenges');
+  // 2) Challenges. Packs (which carry files) are always synced; text-only challenges are
+  //    created if missing and retuned if their decay window is out of date.
+  const existing = (await req(admin, 'GET', '/challenges')).challenges;
   const idByKey = {};
   let created = 0;
-  // Points fall from base to the 20% floor over this many solves. It scales with the number
-  // of teams so values stay varied instead of every challenge sitting on its floor.
-  const DECAY = 30;
-  let retuned = 0;
+  let updated = 0;
+  let files = 0;
   for (const c of CHALLENGES) {
-    const found = existing.challenges.find((x) => x.title === c.title);
-    const spec = {
-      title: c.title, category: c.category, difficulty: c.difficulty, description: c.description,
-      basePoints: c.basePoints,
-      scoring: { strategy: c.strategy, minPoints: Math.round(c.basePoints * 0.2), decay: DECAY },
-      flagType: c.flagType, flag: c.flag ?? '', flagPrefix: c.flagPrefix ?? 'CTF',
-      prerequisites: (c.prereqKey ?? []).map((k) => idByKey[k]),
-      hints: c.hints ?? [], attachments: [], visible: true,
-    };
-    if (found) {
-      idByKey[c.key] = found.id;
-      // Existing challenge with an older, shorter decay window: update it in place.
-      if (found.decay !== DECAY && c.strategy !== 'STATIC') {
-        await req(admin, 'PUT', `/admin/challenges/${found.id}`, spec);
-        retuned++;
-      }
-      continue;
-    }
-    idByKey[c.key] = (await req(admin, 'POST', '/admin/challenges', spec)).id;
-    created++;
+    const found = existing.find((x) => x.title === c.title);
+    const isPack = c.files !== undefined;
+    const needsUpdate = isPack || (found && found.decay !== DECAY && c.strategy !== 'STATIC');
+    const r = await syncChallenge(client, admin, c, idByKey, existing, { updateExisting: Boolean(needsUpdate) });
+    idByKey[c.key] = r.id;
+    if (r.created) created++;
+    else if (needsUpdate) updated++;
+    files += c.files?.length ?? 0;
   }
-  console.log(`  [+] challenges ready (${created} new, ${retuned} retuned, ${CHALLENGES.length - created} already existed)`);
+  console.log(`  [+] challenges ready (${created} new, ${updated} updated, ${files} files uploaded)`);
 
   // 3) Make sure the event is running
   try {
     await req(admin, 'POST', '/admin/event/start');
   } catch {
-    /* already running / paused */
+    /* already running / paused / ended */
   }
 
   // 4) Teams + players (reusing any that exist)
@@ -155,7 +115,7 @@ async function main() {
           if (r.firstBlood) console.log(`      🩸 ${team.name} first blood on ${ch.title}`);
         }
       } catch {
-        /* locked, cooldown, or already solved: all fine on a re-run */
+        /* locked, cooldown, closed, or already solved: all fine on a re-run */
       }
       await sleep(8);
     }

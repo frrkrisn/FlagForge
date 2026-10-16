@@ -8,6 +8,8 @@ cmake-build-*/
 *.a
 *.lib
 *.exe
+# ...but the shipped challenge executables are real artifacts and must be committed
+!challenges/**/*.exe
 *.pdb
 *.ilk
 CMakeUserPresets.json
