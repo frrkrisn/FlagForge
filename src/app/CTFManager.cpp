@@ -130,6 +130,7 @@ std::unique_ptr<Challenge> deserializeChallenge(const json& j) {
             break;
     }
     ch->setDescription(j.value("description", ""));
+    ch->setWriteup(j.value("writeup", ""));
     ch->setScoringParams(j.value("minPoints", base / 5), j.value("decay", 10));
     ch->setScoringTag(tag);
     ch->setVisible(j.value("visible", true));
@@ -151,6 +152,7 @@ json challengeToJson(const Challenge& ch) {
     json j{{"id", ch.id()},
            {"title", ch.title()},
            {"description", ch.description()},
+           {"writeup", ch.writeup()},
            {"category", toString(ch.category())},
            {"difficulty", toString(ch.difficulty())},
            {"basePoints", ch.basePoints()},
@@ -689,6 +691,10 @@ ChallengeDetailDto CTFManager::challengeDetail(const UserId& userId,
     ChallengeDetailDto d;
     static_cast<ChallengeListItemDto&>(d) = buildListItem(ch, team);
     d.description = ch.description();
+    // A writeup unlocks for a team once it has solved the challenge, for everyone once the
+    // event has ended (so the platform doubles as a learning tool), and always for admins.
+    d.hasWriteup = !ch.writeup().empty();
+    if (d.hasWriteup && (isAdmin || d.solved || state_ == EventState::Ended)) d.writeup = ch.writeup();
     for (const Attachment& a : ch.attachments()) {
         AttachmentDto ad{a.name, a.size, a.sha256, isPersonalising(a.transform)};
         if (ad.personalised && team) {
@@ -943,8 +949,10 @@ ChallengeDetailDto CTFManager::editChallenge(const UserId& adminId, const Challe
     s.id = challengeId;
     // Attachments are managed through the file endpoints, so an edit keeps the existing ones.
     const std::vector<Attachment> keptAttachments = challenges_.at(challengeId).attachments();
+    const std::string keptWriteup = challenges_.at(challengeId).writeup();
     auto rebuilt = ChallengeFactory::create(s);
     rebuilt->setAttachments(keptAttachments);
+    if (!spec.writeup) rebuilt->setWriteup(keptWriteup);  // an edit that sends no writeup keeps the old one
     challenges_.add(std::move(rebuilt));  // replaces existing (same key)
     try {
         validatePrerequisiteGraph(challengeView());
@@ -1431,6 +1439,8 @@ ChallengeDetailDto CTFManager::detailForAdmin(const UserId& adminId,
     ChallengeDetailDto d;
     static_cast<ChallengeListItemDto&>(d) = buildListItem(ch, nullptr);
     d.description = ch.description();
+    d.hasWriteup = !ch.writeup().empty();
+    if (d.hasWriteup) d.writeup = ch.writeup();  // admins always see it
     for (const Attachment& a : ch.attachments())
         d.attachments.push_back(AttachmentDto{a.name, a.size, a.sha256, isPersonalising(a.transform)});
     for (const Hint& h : ch.hints()) {

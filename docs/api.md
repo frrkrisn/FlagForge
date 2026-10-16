@@ -106,6 +106,7 @@ ScoringStrategy = "STATIC" | "DECAY" | "DECAY_FIRSTBLOOD" | "DYNAMIC" | "DYNAMIC
 // ChallengeDetail — adds description + hints (text only if unlocked)
 { ...ChallengeListItem,
   "description": "# markdown ...",
+  "hasWriteup": true, "writeup": "# markdown... (present only after your team solves it, when the event has ended, or for admins)",
   "attachments": [{ "name": "capture.pcap", "size": 20480 }],
   "recentSolvers": [{ "teamId": "t_seg", "teamName": "SegFaultSquad",
                       "at": "2026-09-27T10:00:00Z" }],
@@ -348,6 +349,7 @@ SSE is unavailable. Messages are routed into the TanStack Query cache.
 // ChallengeSpec (create / edit)
 { "title": "Robots Rule", "category": "WEB", "difficulty": "MEDIUM",
   "description": "# markdown...", "basePoints": 200,
+  "writeup": "# optional; omitted on edit = keep existing, \"\" = clear",
   "scoring": { "strategy": "DECAY_FIRSTBLOOD", "minPoints": 40, "decay": 10 },
   "flagType": "STATIC" | "DYNAMIC",
   "flag": "CTF{...}",              // STATIC only; write-only, never returned

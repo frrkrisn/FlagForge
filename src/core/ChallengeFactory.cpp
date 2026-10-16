@@ -92,6 +92,7 @@ std::unique_ptr<Challenge> ChallengeFactory::create(const ChallengeSpec& spec) {
     }
 
     challenge->setDescription(spec.description);
+    if (spec.writeup) challenge->setWriteup(*spec.writeup);
     challenge->setScoringParams(spec.minPoints, spec.decay);
     challenge->setScoringTag(toString(spec.scoring));
     challenge->setVisible(spec.visible);

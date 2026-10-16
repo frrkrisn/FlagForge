@@ -127,6 +127,8 @@ struct ScoringDto {
 
 struct ChallengeDetailDto : ChallengeListItemDto {
     std::string description;
+    bool hasWriteup = false;              ///< the author wrote one
+    std::optional<std::string> writeup;   ///< only once solved by the team (or event ended / admin)
     std::vector<AttachmentDto> attachments;
     std::vector<SolverDto> recentSolvers;
     std::vector<HintDto> hints;

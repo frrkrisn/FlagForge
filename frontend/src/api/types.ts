@@ -107,6 +107,8 @@ export interface Hint {
 
 export interface ChallengeDetail extends ChallengeListItem {
   description: string;
+  hasWriteup?: boolean;
+  writeup?: string;
   attachments: Attachment[];
   recentSolvers: { teamId: string; teamName: string; at: string }[];
   hints: Hint[];

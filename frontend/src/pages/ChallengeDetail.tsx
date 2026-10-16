@@ -205,6 +205,22 @@ export default function ChallengeDetail() {
         </div>
       </Panel>
 
+      {c.writeup ? (
+        <Panel title="~/writeup">
+          <div className="prose prose-sm">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize, rehypeHighlight]}>
+              {c.writeup}
+            </ReactMarkdown>
+          </div>
+        </Panel>
+      ) : (
+        c.hasWriteup && (
+          <Panel title="~/writeup">
+            <p className="text-sm text-fg-muted">An official writeup exists. Solve this challenge to unlock it.</p>
+          </Panel>
+        )
+      )}
+
       {c.hints.length > 0 && (
         <Panel title="~/hints">
           <div className="space-y-2">

@@ -69,6 +69,10 @@ public:
 
     // --- mutators (used by admin CRUD / factory) ---
     void setDescription(std::string md) { description_ = std::move(md); }
+
+    /// The author's explanation (markdown). Revealed to a team only after it solves the challenge.
+    const std::string& writeup() const noexcept { return writeup_; }
+    void setWriteup(std::string md);  // validates length
     void setDifficulty(Difficulty d) noexcept { difficulty_ = d; }
     void setVisible(bool v) noexcept { visible_ = v; }
     void setScoringParams(int minPoints, int decay);
@@ -94,6 +98,7 @@ protected:
     ChallengeId id_;
     std::string title_;
     std::string description_;
+    std::string writeup_;
     Category category_;
     Difficulty difficulty_;
     int basePoints_;

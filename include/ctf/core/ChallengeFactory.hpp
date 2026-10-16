@@ -7,6 +7,7 @@
 ///        plaintext flag so it is never stored in the clear.
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,6 +36,9 @@ struct ChallengeSpec {
     Category category = Category::Misc;
     Difficulty difficulty = Difficulty::Easy;
     std::string description;
+    /// Explanation shown after a team solves it. Unset = leave an existing writeup untouched
+    /// (so editing a challenge without sending one never wipes it); set to "" to clear it.
+    std::optional<std::string> writeup;
     int basePoints = 100;
     int minPoints = 20;
     int decay = 10;

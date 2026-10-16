@@ -52,6 +52,7 @@ export function buildSpec(c, idByKey) {
     category: c.category,
     difficulty: c.difficulty,
     description: c.description,
+    writeup: c.writeup ?? "",
     basePoints: c.basePoints,
     scoring: { strategy: c.strategy, minPoints: Math.round(c.basePoints * 0.2), decay: DECAY },
     flagType: c.flagType,

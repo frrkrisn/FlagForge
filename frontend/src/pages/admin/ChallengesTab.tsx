@@ -32,6 +32,7 @@ const EMPTY = {
   category: 'WEB' as Category,
   difficulty: 'EASY' as Difficulty,
   description: '',
+  writeup: '',
   basePoints: 100,
   minPoints: 20,
   decay: 10,
@@ -86,6 +87,7 @@ function Editor() {
       category: f.category,
       difficulty: f.difficulty,
       description: f.description,
+      writeup: f.writeup,
       basePoints: f.basePoints,
       scoring: { strategy: f.flagType === 'DYNAMIC' && f.strategy === 'DECAY' ? 'DYNAMIC' : f.strategy, minPoints: f.minPoints, decay: f.decay },
       flagType: f.flagType,
@@ -152,6 +154,17 @@ function Editor() {
             </ReactMarkdown>
           </div>
         )}
+      </div>
+
+      <div className="space-y-3">
+        <span className="text-xs uppercase tracking-wider text-fg-muted">Writeup (markdown, shown to a team only after it solves the challenge)</span>
+        <textarea
+          value={f.writeup}
+          onChange={(e) => set('writeup', e.target.value)}
+          placeholder={'Explain the intended solution step by step.'}
+          className="h-32 w-full resize-y p-4 font-mono text-sm leading-relaxed"
+          aria-label="Writeup"
+        />
       </div>
 
       <div className="space-y-4 rounded-3xl bg-bg p-6 shadow-nm-inset-sm">

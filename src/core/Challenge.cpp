@@ -45,6 +45,14 @@ const Hint* Challenge::findHint(const HintId& hintId) const {
     return it == hints_.end() ? nullptr : &*it;
 }
 
+void Challenge::setWriteup(std::string md) {
+    constexpr std::size_t kMaxWriteup = 20000;
+    if (md.size() > kMaxWriteup) {
+        throw ValidationException("Writeup too long (max 20,000 characters)");
+    }
+    writeup_ = std::move(md);
+}
+
 const Attachment* Challenge::findAttachment(const std::string& name) const {
     auto it = std::find_if(attachments_.begin(), attachments_.end(),
                            [&](const Attachment& a) { return a.name == name; });

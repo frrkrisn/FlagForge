@@ -128,6 +128,8 @@ json toJson(const ChallengeDetailDto& c) {
     json j;
     addListItemFields(j, c);
     j["description"] = c.description;
+    j["hasWriteup"] = c.hasWriteup;
+    if (c.writeup) j["writeup"] = *c.writeup;
     json atts = json::array();
     for (const auto& a : c.attachments)
         atts.push_back(json{{"name", a.name}, {"size", a.size}, {"sha256", a.sha256},
@@ -213,6 +215,7 @@ ChallengeSpec parseSpec(const json& b) {
     s.category = categoryFromString(b.value("category", std::string("MISC")));
     s.difficulty = difficultyFromString(b.value("difficulty", std::string("EASY")));
     s.description = b.value("description", std::string());
+    if (b.contains("writeup")) s.writeup = b["writeup"].get<std::string>();
     s.basePoints = b.value("basePoints", 100);
     const json sc = b.value("scoring", json::object());
     s.scoring = ChallengeFactory::scoringKindFromString(sc.value("strategy", std::string("DECAY")));
