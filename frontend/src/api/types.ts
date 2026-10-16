@@ -94,6 +94,7 @@ export interface ChallengeListItem {
   solved: boolean;
   locked: boolean;
   missingPrerequisites: { id: string; title: string }[];
+  prerequisiteIds: string[];
   firstBloodByMyTeam: boolean;
   hasHints: boolean;
 }

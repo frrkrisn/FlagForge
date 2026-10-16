@@ -76,3 +76,23 @@ TEST_CASE("Badges are derived from the solve history", "[skills]") {
     auto round = skills::computeSkills({solve("w1"), solve("c1"), solve("f1"), solve("r1")}, all);
     CHECK(has(round, "ALL_ROUNDER"));
 }
+
+#include "ctf/app/CTFManager.hpp"
+#include "support.hpp"
+
+TEST_CASE("The challenge list exposes prerequisite ids for the skill tree", "[app][manager][skills]") {
+    app::CTFManager mgr("s", ctftest::makeTempDir(), std::make_unique<ctftest::FakeClock>());
+    auto admin = mgr.registerUser("admin", "admin@x.com", "password123");
+    ChallengeSpec a;
+    a.id = "a"; a.title = "A"; a.scoring = ScoringKind::Static; a.flag = "CTF{a}";
+    ChallengeSpec b = a;
+    b.id = "b"; b.title = "B"; b.flag = "CTF{b}"; b.prerequisites = {"a"};
+    mgr.createChallenge(admin.me.id, a);
+    mgr.createChallenge(admin.me.id, b);
+    auto list = mgr.listChallenges(admin.me.id);
+    REQUIRE(list.size() == 2);
+    for (const auto& c : list) {
+        if (c.id == "b") CHECK(c.prerequisiteIds == std::vector<ChallengeId>{"a"});
+        else CHECK(c.prerequisiteIds.empty());
+    }
+}

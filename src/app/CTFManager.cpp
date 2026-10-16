@@ -378,6 +378,7 @@ ChallengeListItemDto CTFManager::buildListItem(const Challenge& ch, const Team* 
     d.solveCount = solveCountOf(ch.id());
     d.currentPoints = ch.currentPoints(d.solveCount, false);
     d.hasHints = !ch.hints().empty();
+    d.prerequisiteIds = ch.prerequisites();
 
     if (team) {
         d.solved = team->hasSolved(ch.id());

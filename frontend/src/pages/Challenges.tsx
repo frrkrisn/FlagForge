@@ -1,11 +1,12 @@
 import { Check, Crown, Lock, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useChallenges } from '../api/hooks';
 import type { Category, ChallengeListItem, Difficulty } from '../api/types';
 import { CategoryBadge, DifficultyBadge, PointsBadge } from '../components/domain';
 import { Reveal } from '../components/motion';
 import { Prompt } from '../components/Panel';
+import { SkillTree } from '../components/SkillTree';
 import { EmptyState, Input, Skeleton } from '../components/ui';
 import { cn } from '../lib/cn';
 
@@ -60,6 +61,8 @@ export default function Challenges() {
   const [diff, setDiff] = useState<Difficulty | 'ALL'>('ALL');
   const [status, setStatus] = useState<'ALL' | 'SOLVED' | 'UNSOLVED' | 'LOCKED'>('ALL');
   const [q, setQ] = useState('');
+  const [params] = useSearchParams();
+  const [view, setView] = useState<'cards' | 'tree'>(params.get('view') === 'tree' ? 'tree' : 'cards');
 
   const counts = useMemo(() => {
     const m: Record<string, number> = {};
@@ -99,7 +102,14 @@ export default function Challenges() {
             {c[0] + c.slice(1).toLowerCase()} {counts[c] ? `(${counts[c]})` : ''}
           </button>
         ))}
-        <div className="relative ml-auto">
+        <div className="ml-auto flex gap-1" role="group" aria-label="View">
+          {(['cards', 'tree'] as const).map((v) => (
+            <button key={v} onClick={() => setView(v)} aria-pressed={view === v} className={cn(chip, view === v ? chipOn : chipOff)}>
+              {v}
+            </button>
+          ))}
+        </div>
+        <div className="relative">
           <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-fg-muted" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="search" className="h-8 w-40 pl-7" />
         </div>
@@ -136,10 +146,11 @@ export default function Challenges() {
       {isError && (
         <EmptyState title="Could not load challenges" hint="The server may be unreachable." action={<button className="text-accent" onClick={() => refetch()}>$ retry</button>} />
       )}
-      {data && filtered.length === 0 && (
+      {view === 'cards' && data && filtered.length === 0 && (
         <EmptyState title="No challenges match" hint="Try clearing the filters or search." />
       )}
-      {filtered.length > 0 && (
+      {view === 'tree' && data && <SkillTree items={data} />}
+      {view === 'cards' && filtered.length > 0 && (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((c, i) => (
             <Reveal key={c.id} index={i}>

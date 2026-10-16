@@ -125,6 +125,7 @@ void addListItemFields(json& j, const ChallengeListItemDto& c) {
     json missing = json::array();
     for (const auto& p : c.missingPrerequisites) missing.push_back(toJson(p));
     j["missingPrerequisites"] = missing;
+    j["prerequisiteIds"] = c.prerequisiteIds;
 }
 
 json toJson(const ChallengeListItemDto& c) {

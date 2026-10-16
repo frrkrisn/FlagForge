@@ -102,7 +102,8 @@ ScoringStrategy = "STATIC" | "DECAY" | "DECAY_FIRSTBLOOD" | "DYNAMIC" | "DYNAMIC
   "basePoints": 200, "currentPoints": 173, "minPoints": 40, "decay": 10,
   "solveCount": 4, "solved": false, "locked": true,
   "missingPrerequisites": [{ "id": "c_2", "title": "Inspect Me" }],
-  "firstBloodByMyTeam": false, "hasHints": true }
+  "firstBloodByMyTeam": false, "hasHints": true,
+  "prerequisiteIds": ["c_2"] }  // all prerequisites; the skill tree is drawn from this
 
 // ChallengeDetail — adds description + hints (text only if unlocked)
 { ...ChallengeListItem,

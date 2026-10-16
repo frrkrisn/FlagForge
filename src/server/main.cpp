@@ -106,16 +106,18 @@ int main(int argc, char** argv) {
     // Serve the built React app (production) with SPA fallback.
     if (!opt.webDir.empty()) {
         if (server.set_mount_point("/", opt.webDir)) {
-            server.set_file_request_handler(
-                [&opt](const httplib::Request& req, httplib::Response& res) {
-                    if (req.path.rfind("/api/", 0) == 0) return;
-                    std::ifstream index(opt.webDir + "/index.html", std::ios::binary);
-                    if (index) {
-                        std::string body((std::istreambuf_iterator<char>(index)),
-                                         std::istreambuf_iterator<char>());
-                        res.set_content(body, "text/html");
-                    }
-                });
+            // SPA fallback: an unknown GET that is not an API/metrics call or a file gets the app
+            // shell, so deep links and refreshes (e.g. /challenges) work.
+            server.set_error_handler([&opt](const httplib::Request& req, httplib::Response& res) {
+                if (res.status != 404 || req.method != "GET") return;
+                if (req.path.rfind("/api/", 0) == 0 || req.path == "/metrics") return;
+                if (req.path.find('.') != std::string::npos) return;
+                std::ifstream index(opt.webDir + "/index.html", std::ios::binary);
+                if (!index) return;
+                std::string body((std::istreambuf_iterator<char>(index)), std::istreambuf_iterator<char>());
+                res.status = 200;
+                res.set_content(body, "text/html");
+            });
         } else {
             std::cerr << "warning: could not mount web dir: " << opt.webDir << "\n";
         }

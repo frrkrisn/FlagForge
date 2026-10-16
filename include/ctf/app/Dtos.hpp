@@ -95,6 +95,7 @@ struct ChallengeListItemDto {
     bool solved = false;
     bool locked = false;
     std::vector<PrereqRefDto> missingPrerequisites;
+    std::vector<ChallengeId> prerequisiteIds;  ///< every prerequisite, for drawing the skill tree
     bool firstBloodByMyTeam = false;
     bool hasHints = false;
 };
