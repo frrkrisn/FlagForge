@@ -139,7 +139,9 @@ std::unique_ptr<Challenge> deserializeChallenge(const json& j) {
     }
     for (const auto& a : j.value("attachments", json::array())) {
         ch->addAttachment(Attachment{a.at("name").get<std::string>(),
-                                     a.at("size").get<std::size_t>()});
+                                     a.at("size").get<std::size_t>(),
+                                     a.value("sha256", std::string()),
+                                     a.value("transform", std::string("none"))});
     }
     return ch;
 }
@@ -164,7 +166,10 @@ json challengeToJson(const Challenge& ch) {
     j["hints"] = hints;
     json atts = json::array();
     for (const Attachment& a : ch.attachments()) {
-        atts.push_back(json{{"name", a.name}, {"size", a.size}});
+        atts.push_back(json{{"name", a.name},
+                            {"size", a.size},
+                            {"sha256", a.sha256},
+                            {"transform", a.transform}});
     }
     j["attachments"] = atts;
 
@@ -189,6 +194,7 @@ CTFManager::CTFManager(std::string serverSecret, std::string dataDir,
                        std::unique_ptr<IClock> clock)
     : serverSecret_(std::move(serverSecret)),
       dataDir_(std::move(dataDir)),
+      files_(dataDir_ + "/files"),
       clock_(std::move(clock)),
       feed_(std::make_shared<events::ActivityFeed>(200)),
       eventLog_(std::make_shared<events::EventLog>()),
@@ -682,7 +688,8 @@ ChallengeDetailDto CTFManager::challengeDetail(const UserId& userId,
     ChallengeDetailDto d;
     static_cast<ChallengeListItemDto&>(d) = buildListItem(ch, team);
     d.description = ch.description();
-    for (const Attachment& a : ch.attachments()) d.attachments.push_back(AttachmentDto{a.name, a.size});
+    for (const Attachment& a : ch.attachments())
+        d.attachments.push_back(AttachmentDto{a.name, a.size, a.sha256});
 
     for (const Hint& h : ch.hints()) {
         HintDto hd;
@@ -909,7 +916,10 @@ ChallengeDetailDto CTFManager::editChallenge(const UserId& adminId, const Challe
     if (!challenges_.contains(challengeId)) throw NotFoundException("No such challenge");
     ChallengeSpec s = spec;
     s.id = challengeId;
+    // Attachments are managed through the file endpoints, so an edit keeps the existing ones.
+    const std::vector<Attachment> keptAttachments = challenges_.at(challengeId).attachments();
     auto rebuilt = ChallengeFactory::create(s);
+    rebuilt->setAttachments(keptAttachments);
     challenges_.add(std::move(rebuilt));  // replaces existing (same key)
     try {
         validatePrerequisiteGraph(challengeView());
@@ -925,6 +935,7 @@ void CTFManager::deleteChallenge(const UserId& adminId, const ChallengeId& chall
     std::unique_lock<std::shared_mutex> lock(mutex_);
     requireAdmin(adminId);
     if (!challenges_.remove(challengeId)) throw NotFoundException("No such challenge");
+    files_.removeScope(challengeId);  // its attachments go with it
     refreshScoreboard();
     persistLocked();
 }
@@ -1001,6 +1012,83 @@ std::string CTFManager::revealTeamFlag(const UserId& adminId, const TeamId& team
         return dyn->expectedFlagFor(teamId, serverSecret_);
     }
     throw ValidationException("That challenge does not use per-team dynamic flags");
+}
+
+// ---------------------------------------------------------------------------
+// Attachments
+// ---------------------------------------------------------------------------
+namespace {
+std::string contentTypeFor(const std::string& name) {
+    const auto dot = name.rfind('.');
+    const std::string ext = dot == std::string::npos ? "" : name.substr(dot + 1);
+    if (ext == "txt" || ext == "md" || ext == "c" || ext == "h" || ext == "py" || ext == "js" ||
+        ext == "hex" || ext == "log" || ext == "csv") {
+        return "text/plain; charset=utf-8";
+    }
+    if (ext == "png") return "image/png";
+    if (ext == "jpg" || ext == "jpeg") return "image/jpeg";
+    if (ext == "gif") return "image/gif";
+    if (ext == "wav") return "audio/wav";
+    if (ext == "pcap" || ext == "pcapng") return "application/vnd.tcpdump.pcap";
+    if (ext == "zip") return "application/zip";
+    return "application/octet-stream";
+}
+}  // namespace
+
+AttachmentDto CTFManager::addAttachment(const UserId& adminId, const ChallengeId& challengeId,
+                                        const std::string& name, const std::string& bytes) {
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    requireAdmin(adminId);
+    Challenge& ch = challenges_.at(challengeId);
+    files_.save(challengeId, name, bytes);  // validates the name and the size
+
+    std::vector<Attachment> list = ch.attachments();
+    Attachment fresh{name, bytes.size(), crypto::sha256Hex(bytes), "none"};
+    auto it = std::find_if(list.begin(), list.end(), [&](const Attachment& a) { return a.name == name; });
+    if (it == list.end()) {
+        list.push_back(fresh);
+    } else {
+        fresh.transform = it->transform;  // replacing a file keeps its personalisation mode
+        *it = fresh;
+    }
+    ch.setAttachments(std::move(list));
+    persistLocked();
+    return AttachmentDto{fresh.name, fresh.size, fresh.sha256};
+}
+
+void CTFManager::removeAttachment(const UserId& adminId, const ChallengeId& challengeId,
+                                  const std::string& name) {
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    requireAdmin(adminId);
+    Challenge& ch = challenges_.at(challengeId);
+    if (!ch.findAttachment(name)) throw NotFoundException("No such file");
+    std::vector<Attachment> list = ch.attachments();
+    list.erase(std::remove_if(list.begin(), list.end(), [&](const Attachment& a) { return a.name == name; }),
+               list.end());
+    ch.setAttachments(std::move(list));
+    files_.remove(challengeId, name);
+    persistLocked();
+}
+
+FileDownload CTFManager::downloadAttachment(const UserId& userId, const ChallengeId& challengeId,
+                                            const std::string& name) const {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    const User& user = users_.at(userId);
+    const Challenge& ch = challenges_.at(challengeId);
+    const Attachment* att = ch.findAttachment(name);
+    if (!att) throw NotFoundException("No such file");
+
+    if (user.role() != Role::Admin) {
+        if (!ch.visible()) throw NotFoundException("No such file");  // hidden = does not exist
+        requireRunning();
+        const auto* player = dynamic_cast<const Player*>(&user);
+        const Team* team = (player && player->hasTeam()) ? teams_.get(player->teamId().value()) : nullptr;
+        const std::vector<ChallengeId> solved = team ? solvedIdsOf(*team) : std::vector<ChallengeId>{};
+        if (!missingPrerequisites(challengeView(), challengeId, solved).empty()) {
+            throw ChallengeLockedException("Solve the prerequisites to unlock this file");
+        }
+    }
+    return FileDownload{att->name, contentTypeFor(att->name), files_.load(challengeId, name)};
 }
 
 // ---------------------------------------------------------------------------
@@ -1238,7 +1326,8 @@ ChallengeDetailDto CTFManager::detailForAdmin(const UserId& adminId,
     ChallengeDetailDto d;
     static_cast<ChallengeListItemDto&>(d) = buildListItem(ch, nullptr);
     d.description = ch.description();
-    for (const Attachment& a : ch.attachments()) d.attachments.push_back(AttachmentDto{a.name, a.size});
+    for (const Attachment& a : ch.attachments())
+        d.attachments.push_back(AttachmentDto{a.name, a.size, a.sha256});
     for (const Hint& h : ch.hints()) {
         HintDto hd;
         hd.id = h.id();

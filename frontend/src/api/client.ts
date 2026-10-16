@@ -17,14 +17,17 @@ type Envelope<T> = { ok: true; data: T } | { ok: false; error: { code: string; m
 interface RequestOptions {
   method?: string;
   body?: unknown;
+  /** A raw file body (sent as application/octet-stream) instead of JSON. */
+  raw?: Blob;
   signal?: AbortSignal;
 }
 
 async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
+  const isJson = opts.body !== undefined && opts.raw === undefined;
   const res = await fetch(`/api${path}`, {
     method: opts.method ?? 'GET',
-    headers: opts.body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    headers: opts.raw ? { 'Content-Type': 'application/octet-stream' } : isJson ? { 'Content-Type': 'application/json' } : undefined,
+    body: opts.raw ?? (isJson ? JSON.stringify(opts.body) : undefined),
     credentials: 'same-origin',
     signal: opts.signal,
   });
@@ -49,4 +52,5 @@ export const api = {
   put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
   del: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  putFile: <T>(path: string, file: Blob) => request<T>(path, { method: 'PUT', raw: file }),
 };

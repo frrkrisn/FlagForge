@@ -1,4 +1,4 @@
-import { Dices, Eye, EyeOff, Plus, Search, Trash2, X } from 'lucide-react';
+import { Dices, Eye, EyeOff, Paperclip, Plus, Search, Trash2, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
@@ -6,11 +6,12 @@ import rehypeSanitize from 'rehype-sanitize';
 import remarkGfm from 'remark-gfm';
 import { toast } from 'sonner';
 import { ApiError } from '../../api/client';
-import { useAdminChallengeMutations, useChallenges } from '../../api/hooks';
+import { useAdminChallengeMutations, useChallenges, useUploadAttachment } from '../../api/hooks';
 import type { Category, Difficulty } from '../../api/types';
 import { CategoryBadge } from '../../components/domain';
 import { Panel } from '../../components/Panel';
 import { Button, EmptyState, Input, Skeleton } from '../../components/ui';
+import { formatBytes } from '../../lib/format';
 import { Field, Segmented, ToggleChip } from './shared';
 import { randomFlag } from './util';
 
@@ -65,6 +66,8 @@ function DecayPreview({ base, min, decay, fixed }: { base: number; min: number; 
 function Editor() {
   const { data: challenges } = useChallenges();
   const { create } = useAdminChallengeMutations();
+  const upload = useUploadAttachment();
+  const [files, setFiles] = useState<File[]>([]);
   const [f, setF] = useState(EMPTY);
   const [mode, setMode] = useState<'write' | 'preview'>('write');
   const set = <K extends keyof typeof EMPTY>(k: K, v: (typeof EMPTY)[K]) => setF((p) => ({ ...p, [k]: v }));
@@ -94,9 +97,20 @@ function Editor() {
       visible: true,
     };
     create.mutate(spec, {
-      onSuccess: (c) => {
-        toast.success(`Created "${c.title}"`);
+      onSuccess: async (c) => {
+        // Files go up after the challenge exists (they are stored per challenge id).
+        let failed = 0;
+        for (const file of files) {
+          try {
+            await upload.mutateAsync({ challengeId: c.id, file });
+          } catch {
+            failed++;
+          }
+        }
+        if (failed) toast.error(`${failed} file(s) failed to upload. Use the paperclip in the list to retry.`);
+        toast.success(`Created "${c.title}"${files.length - failed ? ` with ${files.length - failed} file(s)` : ''}`);
         setF(EMPTY);
+        setFiles([]);
         setMode('write');
       },
       onError: (e) => toast.error(e instanceof ApiError ? e.message : 'Could not create the challenge'),
@@ -194,6 +208,40 @@ function Editor() {
         ))}
       </div>
 
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs uppercase tracking-wider text-fg-muted">Files for players (optional)</span>
+          <label className="nm-btn inline-flex h-8 cursor-pointer items-center gap-2 px-3.5 text-xs">
+            <Paperclip size={14} /> Add files
+            <input
+              type="file"
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                setFiles((prev) => [...prev, ...Array.from(e.target.files ?? [])]);
+                e.target.value = '';
+              }}
+            />
+          </label>
+        </div>
+        {files.length === 0 ? (
+          <p className="text-xs text-fg-muted">A pcap, a binary, an image… Players see each file&apos;s size and SHA-256.</p>
+        ) : (
+          <ul className="space-y-2">
+            {files.map((file, i) => (
+              <li key={`${file.name}-${i}`} className="flex items-center gap-3 rounded-xl bg-bg px-4 py-2.5 text-sm shadow-nm-inset-sm">
+                <Paperclip size={14} className="text-fg-muted" />
+                <span className="min-w-0 flex-1 truncate font-mono">{file.name}</span>
+                <span className="text-xs text-fg-muted">{formatBytes(file.size)}</span>
+                <Button type="button" variant="ghost" size="icon" aria-label={`Remove ${file.name}`} onClick={() => setFiles(files.filter((_, j) => j !== i))}>
+                  <X size={15} />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <Field label="Requires (prerequisites)" hint="Players must solve these first. Cycles are rejected by the server.">
         <div className="flex flex-wrap gap-2.5">
           {(challenges ?? []).map((c) => (
@@ -212,7 +260,7 @@ function Editor() {
           ))}
         </ul>
       )}
-      <Button className="w-full" loading={create.isPending} disabled={problems.length > 0} onClick={submit}>
+      <Button className="w-full" loading={create.isPending || upload.isPending} disabled={problems.length > 0} onClick={submit}>
         Create challenge
       </Button>
     </Panel>
@@ -222,6 +270,7 @@ function Editor() {
 function ChallengeList() {
   const { data: challenges, isLoading } = useChallenges();
   const { remove, setVisibility } = useAdminChallengeMutations();
+  const upload = useUploadAttachment();
   const [q, setQ] = useState('');
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
@@ -264,6 +313,29 @@ function ChallengeList() {
                     </>
                   ) : (
                     <>
+                      <label
+                        title="Attach a file"
+                        className="nm-btn nm-btn-ghost inline-grid h-10 w-10 cursor-pointer place-items-center !rounded-full"
+                      >
+                        <Paperclip size={16} />
+                        <span className="sr-only">Attach a file to {c.title}</span>
+                        <input
+                          type="file"
+                          className="sr-only"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            e.target.value = '';
+                            if (!file) return;
+                            upload.mutate(
+                              { challengeId: c.id, file },
+                              {
+                                onSuccess: (a) => toast.success(`Attached ${a.name} (${formatBytes(a.size)})`),
+                                onError: (err) => toast.error(err instanceof ApiError ? err.message : 'Upload failed'),
+                              },
+                            );
+                          }}
+                        />
+                      </label>
                       <Button size="icon" variant="ghost" aria-label={`Hide ${c.title}`} title="Hide from players" onClick={() => setVisibility.mutate({ id: c.id, visible: false }, { onSuccess: () => toast.success('Hidden from players') })}>
                         <EyeOff size={16} />
                       </Button>

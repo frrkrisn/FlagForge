@@ -45,6 +45,12 @@ const Hint* Challenge::findHint(const HintId& hintId) const {
     return it == hints_.end() ? nullptr : &*it;
 }
 
+const Attachment* Challenge::findAttachment(const std::string& name) const {
+    auto it = std::find_if(attachments_.begin(), attachments_.end(),
+                           [&](const Attachment& a) { return a.name == name; });
+    return it == attachments_.end() ? nullptr : &*it;
+}
+
 int Challenge::currentPoints(int solveCount, bool firstBlood) const {
     const scoring::ScoringContext ctx{basePoints_, minPoints_, decay_, solveCount, firstBlood};
     return scoring_ ? scoring_->pointsFor(ctx) : basePoints_;

@@ -129,7 +129,8 @@ json toJson(const ChallengeDetailDto& c) {
     addListItemFields(j, c);
     j["description"] = c.description;
     json atts = json::array();
-    for (const auto& a : c.attachments) atts.push_back(json{{"name", a.name}, {"size", a.size}});
+    for (const auto& a : c.attachments)
+        atts.push_back(json{{"name", a.name}, {"size", a.size}, {"sha256", a.sha256}});
     j["attachments"] = atts;
     json solvers = json::array();
     for (const auto& s : c.recentSolvers)
@@ -289,6 +290,9 @@ json parseBody(const httplib::Request& req) {
 void ApiRouter::registerRoutes(httplib::Server& server) {
     auto& mgr = manager_;
 
+    // Attachments are uploaded as a raw request body (up to 25 MB + headroom).
+    server.set_payload_max_length(30u * 1024u * 1024u);
+
     server.Get("/api/health", [](const httplib::Request&, httplib::Response& res) {
         writeOk(res, json{{"status", "up"}, {"version", ctf::version()}});
     });
@@ -411,6 +415,41 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
                        return toJson(mgr.challengeDetail(requireUser(req), req.matches[1]));
                    });
                });
+
+    // --- attachments ---
+    // Download is a raw binary response, so it does not use the JSON `guarded` wrapper.
+    server.Get(R"(/api/challenges/([^/]+)/files/([^/]+))",
+               [this, &mgr](const httplib::Request& req, httplib::Response& res) {
+                   try {
+                       const UserId uid = requireUser(req);
+                       const FileDownload f = mgr.downloadAttachment(uid, req.matches[1], req.matches[2]);
+                       res.set_header("Content-Disposition", "attachment; filename=\"" + f.name + "\"");
+                       res.set_header("X-Content-Type-Options", "nosniff");
+                       res.set_content(f.bytes, f.contentType);
+                   } catch (const CtfException& e) {
+                       writeFail(res, e.httpStatus(), e.code(), e.what());
+                   } catch (const std::exception&) {
+                       writeFail(res, 500, "INTERNAL", "Internal server error");
+                   }
+               });
+    server.Put(R"(/api/admin/challenges/([^/]+)/files/([^/]+))",
+               [this, &mgr](const httplib::Request& req, httplib::Response& res) {
+                   guarded(res, [&] {
+                       const UserId uid = requireUser(req);
+                       requireAdmin(uid);
+                       const auto a = mgr.addAttachment(uid, req.matches[1], req.matches[2], req.body);
+                       return json{{"name", a.name}, {"size", a.size}, {"sha256", a.sha256}};
+                   });
+               });
+    server.Delete(R"(/api/admin/challenges/([^/]+)/files/([^/]+))",
+                  [this, &mgr](const httplib::Request& req, httplib::Response& res) {
+                      guarded(res, [&] {
+                          const UserId uid = requireUser(req);
+                          requireAdmin(uid);
+                          mgr.removeAttachment(uid, req.matches[1], req.matches[2]);
+                          return json{{"deleted", true}};
+                      });
+                  });
 
     // --- scoreboard / feed / announcements ---
     server.Get("/api/scoreboard", [&mgr](const httplib::Request&, httplib::Response& res) {

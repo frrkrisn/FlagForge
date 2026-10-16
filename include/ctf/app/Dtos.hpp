@@ -92,6 +92,14 @@ struct ChallengeListItemDto {
 struct AttachmentDto {
     std::string name;
     std::size_t size = 0;
+    std::string sha256;
+};
+
+/// A file ready to send to the client (bytes may be personalised for the requesting team).
+struct FileDownload {
+    std::string name;
+    std::string contentType;
+    std::string bytes;
 };
 
 struct HintDto {

@@ -248,8 +248,11 @@ Detail. Hint `text` present only for hints this team has unlocked.
 `200 { data: ChallengeDetail }` · `404 NOT_FOUND`.
 
 #### `GET /api/challenges/:id/files/:name` — `user`
-Downloads an attachment (binary stream, `Content-Disposition: attachment`). Event must be running.
-`404 NOT_FOUND` · `403 CLOSED`.
+Downloads an attachment as a binary response with `Content-Disposition: attachment` and
+`X-Content-Type-Options: nosniff`. Same rules as the board: the challenge must be visible, the event
+must be running, and the team must have solved the prerequisites (admins may always download).
+`ChallengeDetail.attachments[]` is `{ name, size, sha256 }`, so players can verify the file.
+`404 NOT_FOUND` (unknown or hidden) · `403 CLOSED` · `423 LOCKED`.
 
 #### `POST /api/challenges/:id/submit` — `user` (must be in a team)
 ```jsonc
@@ -325,6 +328,8 @@ SSE is unavailable. Messages are routed into the TanStack Query cache.
 | `PUT /api/admin/challenges/:id` | `ChallengeSpec` | updated `ChallengeDetail` |
 | `DELETE /api/admin/challenges/:id` | — | `{ "deleted": true }` |
 | `POST /api/admin/challenges/:id/visibility` | `{ "visible": true }` | updated item |
+| `PUT /api/admin/challenges/:id/files/:name` | raw bytes (`application/octet-stream`, max 25 MB) | `{ "name", "size", "sha256" }`. Stores or replaces a file. `:name` is 1–80 chars of `[A-Za-z0-9._-]`, not starting with `.` |
+| `DELETE /api/admin/challenges/:id/files/:name` | — | `{ "deleted": true }` |
 | `POST /api/admin/event/start` | — | event status |
 | `POST /api/admin/event/pause` | — | event status |
 | `POST /api/admin/event/resume` | — | event status |

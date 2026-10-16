@@ -300,6 +300,22 @@ export function useAdminChallengeMutations() {
   };
 }
 
+/** Upload (or replace) an attachment on a challenge. Admin only. */
+export function useUploadAttachment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (b: { challengeId: string; file: File }) =>
+      api.putFile<{ name: string; size: number; sha256: string }>(
+        `/admin/challenges/${b.challengeId}/files/${encodeURIComponent(b.file.name)}`,
+        b.file,
+      ),
+    onSuccess: (_d, b) => {
+      qc.invalidateQueries({ queryKey: keys.challenge(b.challengeId) });
+      qc.invalidateQueries({ queryKey: keys.challenges });
+    },
+  });
+}
+
 export function usePostAnnouncement() {
   const qc = useQueryClient();
   return useMutation({

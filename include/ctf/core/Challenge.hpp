@@ -23,6 +23,8 @@ namespace ctf {
 struct Attachment {
     std::string name;
     std::size_t size = 0;
+    std::string sha256;                ///< hex digest of the stored bytes (shown to players)
+    std::string transform = "none";    ///< how the bytes are personalised per team on download
 };
 
 /// Context passed to checkFlag: the submitting team and the server secret (needed
@@ -77,6 +79,8 @@ public:
     void setPrerequisites(std::vector<ChallengeId> prereqs) { prerequisites_ = std::move(prereqs); }
     void addHint(Hint hint) { hints_.push_back(std::move(hint)); }
     void addAttachment(Attachment a) { attachments_.push_back(std::move(a)); }
+    void setAttachments(std::vector<Attachment> list) { attachments_ = std::move(list); }
+    const Attachment* findAttachment(const std::string& name) const;
     const Hint* findHint(const HintId& hintId) const;
 
     /// Current point value after \p solveCount solves, delegating to the strategy

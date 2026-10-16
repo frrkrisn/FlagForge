@@ -30,6 +30,7 @@
 #include "ctf/events/CooldownTracker.hpp"
 #include "ctf/events/EventBus.hpp"
 #include "ctf/events/Observers.hpp"
+#include "ctf/persistence/FileStore.hpp"
 #include "ctf/persistence/Repository.hpp"
 #include "ctf/scoring/Scoreboard.hpp"
 
@@ -129,6 +130,17 @@ public:
     std::string revealTeamFlag(const UserId& adminId, const TeamId& teamId,
                                const ChallengeId& challengeId) const;
 
+    // --- attachments ---------------------------------------------------------
+    /// Store (or replace) a file on a challenge; records its size and SHA-256. Admin only.
+    AttachmentDto addAttachment(const UserId& adminId, const ChallengeId& challengeId,
+                                const std::string& name, const std::string& bytes);
+    void removeAttachment(const UserId& adminId, const ChallengeId& challengeId,
+                          const std::string& name);
+    /// A file for a player or admin. Players need a visible, unlocked challenge and a
+    /// running event; the same rules the challenge board applies.
+    FileDownload downloadAttachment(const UserId& userId, const ChallengeId& challengeId,
+                                    const std::string& name) const;
+
 private:
     // --- internal helpers (assume the appropriate lock is already held) ----
     void requireAdmin(const UserId& userId) const;
@@ -161,6 +173,7 @@ private:
     // --- owned state -------------------------------------------------------
     std::string serverSecret_;
     std::string dataDir_;
+    persistence::FileStore files_;   // challenge attachments: <dataDir>/files/<challengeId>/<name>
     std::unique_ptr<IClock> clock_;  // declared before members that borrow it
 
     mutable std::shared_mutex mutex_;

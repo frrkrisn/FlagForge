@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import { ArrowLeft, Check, Download, Lock } from 'lucide-react';
+import { ArrowLeft, Check, Download, FileDown, Lock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import ReactMarkdown from 'react-markdown';
@@ -12,7 +12,9 @@ import { ApiError } from '../api/client';
 import { useChallenge, useSubmitFlag, useUnlockHint } from '../api/hooks';
 import type { Hint, SubmitOutcome } from '../api/types';
 import { CategoryBadge, DifficultyBadge, PointsBadge } from '../components/domain';
+import { formatBytes, shortHash } from '../lib/format';
 import { Panel } from '../components/Panel';
+import { CopyButton } from './admin/shared';
 import { Button, Input, Skeleton } from '../components/ui';
 import { cn } from '../lib/cn';
 
@@ -160,17 +162,37 @@ export default function ChallengeDetail() {
           </div>
 
           {c.attachments.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-3">
+              <div className="text-xs uppercase tracking-wider text-fg-muted">Files</div>
               {c.attachments.map((a) => (
-                <a
-                  key={a.name}
-                  href={`/api/challenges/${c.id}/files/${encodeURIComponent(a.name)}`}
-                  className="flex items-center gap-2 rounded-xl bg-panel px-4 py-2 text-sm text-fg shadow-nm-raised-sm transition-shadow hover:text-accent active:shadow-nm-inset-sm"
-                >
-                  <Download size={14} /> {a.name}
-                  <span className="text-fg-muted">({Math.round(a.size / 1024)} KB)</span>
-                </a>
+                <div key={a.name} className="flex flex-wrap items-center gap-4 rounded-2xl bg-bg p-4 shadow-nm-inset-sm">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-panel text-accent shadow-nm-raised-sm">
+                    <FileDown size={20} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-mono text-sm text-fg">{a.name}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-fg-muted">
+                      <span>{formatBytes(a.size)}</span>
+                      {a.sha256 && (
+                        <span title={a.sha256} className="font-mono">
+                          sha256 {shortHash(a.sha256)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {a.sha256 && <CopyButton text={a.sha256} label="Copy hash" />}
+                  <a
+                    href={`/api/challenges/${c.id}/files/${encodeURIComponent(a.name)}`}
+                    download={a.name}
+                    className="nm-btn nm-btn-primary inline-flex h-9 items-center gap-2 px-4 text-xs font-medium"
+                  >
+                    <Download size={14} /> Download
+                  </a>
+                </div>
               ))}
+              <p className="text-xs text-fg-muted">
+                Verify your download with the SHA-256 above (<code className="text-fg">sha256sum {c.attachments[0].name}</code>).
+              </p>
             </div>
           )}
         </div>

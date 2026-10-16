@@ -89,6 +89,13 @@ export interface ChallengeListItem {
   hasHints: boolean;
 }
 
+export interface Attachment {
+  name: string;
+  size: number;
+  /** SHA-256 of the file, so players can verify their download. */
+  sha256: string;
+}
+
 export interface Hint {
   id: string;
   cost: number;
@@ -98,7 +105,7 @@ export interface Hint {
 
 export interface ChallengeDetail extends ChallengeListItem {
   description: string;
-  attachments: { name: string; size: number }[];
+  attachments: Attachment[];
   recentSolvers: { teamId: string; teamName: string; at: string }[];
   hints: Hint[];
   prerequisites: PrereqRef[];
