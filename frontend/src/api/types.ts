@@ -34,6 +34,13 @@ export interface Me {
   team: TeamSummary | null;
 }
 
+export interface Skill {
+  category: Category;
+  solved: number;
+  total: number;
+  points: number;
+}
+
 export interface UserPublic {
   id: string;
   username: string;
@@ -43,6 +50,7 @@ export interface UserPublic {
   teamId: string | null;
   personalSolves: number;
   badges: string[];
+  skills: Skill[];
 }
 
 export interface TeamMember {
@@ -63,6 +71,7 @@ export interface Team {
   rank: number;
   solves: number;
   badges: string[];
+  skills: Skill[];
   solvedChallengeIds: string[];
 }
 

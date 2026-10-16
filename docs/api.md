@@ -76,7 +76,8 @@ ScoringStrategy = "STATIC" | "DECAY" | "DECAY_FIRSTBLOOD" | "DYNAMIC" | "DYNAMIC
 // UserPublic — safe to show to anyone
 { "id": "u_neo", "username": "neo", "role": "PLAYER", "bio": "...",
   "avatarSeed": "neo", "teamId": "t_null", "personalSolves": 7,
-  "badges": ["FIRST_BLOOD"] }
+  "badges": ["FIRST_BLOOD"],
+  "skills": [{ "category": "WEB", "solved": 2, "total": 4, "points": 300 }] }  // radar from this player's own solves
 
 // Me — the authenticated user (adds email, themePrefs, team)
 { "id": "u_neo", "username": "neo", "email": "neo@example.com", "role": "PLAYER",
@@ -94,7 +95,7 @@ ScoringStrategy = "STATIC" | "DECAY" | "DECAY_FIRSTBLOOD" | "DYNAMIC" | "DYNAMIC
 { "id": "t_null", "name": "NullPointers", "captainId": "u_neo",
   "inviteCode": "J7X2QF", "members": [TeamMember],
   "score": 1340, "rank": 3, "solves": 6,
-  "badges": ["FIRST_BLOOD"], "solvedChallengeIds": ["c_1","c_2"] }
+  "badges": ["FIRST_BLOOD", "MASTER_WEB"], "skills": [{ "category": "WEB", "solved": 2, "total": 4, "points": 300 }], "solvedChallengeIds": ["c_1","c_2"] }
 
 // ChallengeListItem — NO flag, NO hint text
 { "id": "c_4", "title": "Robots Rule", "category": "WEB", "difficulty": "MEDIUM",
@@ -383,3 +384,7 @@ Agent at it, or just `curl localhost:8080/metrics`.
 3. The public scoreboard and its SSE messages respect the freeze; the admin scoreboard does not.
 4. Every list view can be empty (`[]`) — clients must render empty states.
 5. `serverTime` is authoritative for countdowns.
+
+### Skills and badges
+
+`skills` is a fixed-order list (WEB, CRYPTO, FORENSICS, REVERSE, PWN, MISC) of `solved`/`total` visible challenges and the base `points` solved, used to draw the profile radar. Badges are derived from the solve history, never stored: `FIRST_BLOOD`, `ON_THE_BOARD` (1 solve), `MASTER_<CATEGORY>` (every challenge in a category with at least 2), `ALL_ROUNDER` (4+ categories), `HARD_HITTER` (a hard solve), `VETERAN` (10+ solves).

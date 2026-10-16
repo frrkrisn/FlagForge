@@ -69,6 +69,14 @@ json toJson(const MeDto& m) {
     return j;
 }
 
+json toJson(const std::vector<SkillDto>& skills) {
+    json a = json::array();
+    for (const auto& s : skills) {
+        a.push_back({{"category", toString(s.category)}, {"solved", s.solved}, {"total", s.total}, {"points", s.points}});
+    }
+    return a;
+}
+
 json toJson(const UserPublicDto& u) {
     return json{{"id", u.id},
                 {"username", u.username},
@@ -77,7 +85,8 @@ json toJson(const UserPublicDto& u) {
                 {"avatarSeed", u.avatarSeed},
                 {"teamId", u.teamId ? json(*u.teamId) : json(nullptr)},
                 {"personalSolves", u.personalSolves},
-                {"badges", u.badges}};
+                {"badges", u.badges},
+                {"skills", toJson(u.skills)}};
 }
 
 json toJson(const TeamMemberDto& m) {
@@ -90,7 +99,7 @@ json toJson(const TeamDto& t) {
     for (const auto& m : t.members) members.push_back(toJson(m));
     json j{{"id", t.id},         {"name", t.name},   {"captainId", t.captainId},
            {"members", members}, {"score", t.score}, {"rank", t.rank},
-           {"solves", t.solves}, {"badges", t.badges}, {"solvedChallengeIds", t.solvedChallengeIds}};
+           {"solves", t.solves}, {"badges", t.badges}, {"skills", toJson(t.skills)}, {"solvedChallengeIds", t.solvedChallengeIds}};
     if (t.inviteCode) j["inviteCode"] = *t.inviteCode;
     return j;
 }

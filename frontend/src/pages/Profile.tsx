@@ -1,9 +1,9 @@
-import { Award } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { usePlayer, useTeam } from '../api/hooks';
 import { Panel } from '../components/Panel';
 import { TeamAvatar } from '../components/TeamAvatar';
-import { Badge, EmptyState, Skeleton } from '../components/ui';
+import { SkillRadar, BadgeList } from '../components/SkillRadar';
+import { EmptyState, Skeleton } from '../components/ui';
 
 function TeamProfile({ id }: { id: string }) {
   const { data: team, isLoading, isError } = useTeam(id);
@@ -19,16 +19,9 @@ function TeamProfile({ id }: { id: string }) {
             <div className="text-sm text-fg-muted">rank #{team.rank} · {team.score} pts · {team.solves} solves</div>
           </div>
         </div>
-        {team.badges.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {team.badges.map((b) => (
-              <Badge key={b} className="text-warning" color="var(--warning)">
-                <Award size={12} /> {b.replace('_', ' ').toLowerCase()}
-              </Badge>
-            ))}
-          </div>
-        )}
       </Panel>
+      <Panel title="~/skills"><SkillRadar skills={team.skills} /></Panel>
+      <Panel title="~/badges"><BadgeList badges={team.badges} /></Panel>
       <Panel title="~/team/members">
         <ul className="space-y-1">
           {team.members.map((m) => (
@@ -68,14 +61,9 @@ function PlayerProfile({ id }: { id: string }) {
           </div>
         </div>
         {user.bio && <p className="mt-4 text-sm text-fg-muted">{user.bio}</p>}
-        {user.badges.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {user.badges.map((b) => (
-              <Badge key={b} color="var(--warning)"><Award size={12} /> {b.replace('_', ' ').toLowerCase()}</Badge>
-            ))}
-          </div>
-        )}
       </Panel>
+      <Panel title="~/skills"><SkillRadar skills={user.skills} /></Panel>
+      <Panel title="~/badges"><BadgeList badges={user.badges} /></Panel>
     </div>
   );
 }

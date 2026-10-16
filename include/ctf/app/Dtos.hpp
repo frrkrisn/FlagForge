@@ -35,6 +35,13 @@ struct MeDto {
     std::optional<TeamSummaryDto> team;
 };
 
+struct SkillDto {
+    Category category = Category::Misc;
+    int solved = 0;
+    int total = 0;
+    int points = 0;
+};
+
 struct UserPublicDto {
     UserId id;
     std::string username;
@@ -44,6 +51,7 @@ struct UserPublicDto {
     std::optional<TeamId> teamId;
     int personalSolves = 0;
     std::vector<std::string> badges;
+    std::vector<SkillDto> skills;  ///< radar from this player's own solves
 };
 
 struct TeamMemberDto {
@@ -64,6 +72,7 @@ struct TeamDto {
     int rank = 0;
     int solves = 0;
     std::vector<std::string> badges;
+    std::vector<SkillDto> skills;  ///< radar from the whole team's solves
     std::vector<ChallengeId> solvedChallengeIds;
 };
 

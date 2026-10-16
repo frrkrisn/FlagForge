@@ -1,7 +1,9 @@
 #include "ctf/app/CTFManager.hpp"
+#include "ctf/core/Skills.hpp"
 
 #include <algorithm>
 #include <array>
+#include <set>
 #include <cstdlib>
 #include <random>
 #include <utility>
@@ -353,7 +355,13 @@ TeamDto CTFManager::buildTeamDto(const Team& team, bool includeInvite) const {
             break;
         }
     }
-    for (const std::string& b : team.badges()) d.badges.push_back(b);
+    {
+        const auto prof = skills::computeSkills(team.solves(), challengeView());
+        std::set<std::string> merged(prof.badges.begin(), prof.badges.end());
+        for (const std::string& b : team.badges()) merged.insert(b);
+        d.badges.assign(merged.begin(), merged.end());
+        for (const auto& s : prof.radar) d.skills.push_back({s.category, s.solved, s.total, s.points});
+    }
     d.solvedChallengeIds = solvedIdsOf(team);
     return d;
 }
@@ -480,7 +488,13 @@ UserPublicDto CTFManager::userPublic(const UserId& userId) const {
         d.personalSolves = p->personalSolves();
         if (p->hasTeam()) {
             if (const Team* t = teams_.get(p->teamId().value())) {
-                for (const std::string& b : t->badges()) d.badges.push_back(b);
+                std::vector<SolveRecord> mine;
+                for (const SolveRecord& s : t->solves()) {
+                    if (s.playerId == userId) mine.push_back(s);
+                }
+                const auto prof = skills::computeSkills(mine, challengeView());
+                d.badges = prof.badges;
+                for (const auto& s : prof.radar) d.skills.push_back({s.category, s.solved, s.total, s.points});
             }
         }
     }
