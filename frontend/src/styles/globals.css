@@ -390,6 +390,11 @@ body {
 .prose :where(a) {
   color: var(--accent);
 }
+.prose :where(code)::before,
+.prose :where(code)::after {
+  content: none;
+}
+
 .prose :where(code) {
   color: var(--accent);
   background: var(--overlay);
