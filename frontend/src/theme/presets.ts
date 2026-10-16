@@ -16,6 +16,7 @@ export type SizeChoice = 'sm' | 'md' | 'lg';
 export type Density = 'compact' | 'comfortable';
 
 export interface EffectFlags {
+  depth: boolean; // soft, neumorphic relief on cards/buttons/inputs
   glow: boolean;
   scanlines: boolean;
   vignette: boolean;
@@ -58,15 +59,15 @@ export const FONT_STACKS: Record<FontChoice, string> = {
 };
 
 export const SIZE_PX: Record<SizeChoice, string> = {
-  sm: '14px',
-  md: '16px',
-  lg: '18px',
+  sm: '15px',
+  md: '17px',
+  lg: '19px',
 };
 
 export const DEFAULT_THEME: ThemeState = {
   preset: 'matrix',
   accent: null,
-  effects: { glow: true, scanlines: true, vignette: true, motion: true, boot: true },
+  effects: { depth: true, glow: true, scanlines: false, vignette: false, motion: true, boot: true },
   font: 'jetbrains',
   size: 'md',
   density: 'comfortable',

@@ -41,7 +41,7 @@ export default function Login() {
     <div className="grid min-h-screen md:grid-cols-2">
       <div className="hidden flex-col justify-center gap-6 border-r border-border bg-panel p-10 md:flex">
         <Link to="/">
-          <AsciiWordmark className="text-xs" />
+          <AsciiWordmark className="w-full max-w-md" />
         </Link>
         <p className="max-w-sm text-sm text-fg-muted">
           Sign in to submit flags, climb the leaderboard, and draw first blood.

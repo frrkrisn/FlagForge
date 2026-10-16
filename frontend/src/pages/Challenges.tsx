@@ -4,11 +4,17 @@ import { Link } from 'react-router-dom';
 import { useChallenges } from '../api/hooks';
 import type { Category, ChallengeListItem, Difficulty } from '../api/types';
 import { CategoryBadge, DifficultyBadge, PointsBadge } from '../components/domain';
+import { Reveal } from '../components/motion';
 import { Prompt } from '../components/Panel';
 import { EmptyState, Input, Skeleton } from '../components/ui';
 import { cn } from '../lib/cn';
 
 const CATEGORIES: Category[] = ['WEB', 'CRYPTO', 'FORENSICS', 'REVERSE', 'PWN', 'MISC'];
+
+// Filter chips: raised when idle, pressed-in when selected.
+const chip = 'rounded-full px-4 py-1.5 text-xs transition-shadow';
+const chipOn = 'bg-bg text-accent shadow-nm-inset-sm';
+const chipOff = 'bg-panel text-fg-muted shadow-nm-raised-sm hover:text-fg';
 const DIFFS: Difficulty[] = ['EASY', 'MEDIUM', 'HARD'];
 
 function Card({ c }: { c: ChallengeListItem }) {
@@ -16,12 +22,13 @@ function Card({ c }: { c: ChallengeListItem }) {
     <Link
       to={`/challenges/${c.id}`}
       className={cn(
-        'group relative flex flex-col gap-3 rounded-lg border border-border bg-panel p-4 transition-colors hover:border-accent',
-        c.solved && 'border-accent/50',
+        'group relative flex h-full flex-col gap-4 rounded-3xl p-6 transition-all duration-300 hover:-translate-y-0.5',
+        // solved = pressed into the surface; open = raised and lifts a touch on hover
+        c.solved ? 'bg-bg shadow-nm-inset' : 'bg-panel shadow-nm-raised hover:shadow-nm-raised-sm',
       )}
     >
       {c.locked && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 rounded-lg bg-bg/80 text-center">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1 rounded-3xl bg-panel/90 text-center backdrop-blur-sm">
           <Lock size={18} className="text-fg-muted" />
           <span className="px-3 text-xs text-fg-muted">
             Requires {c.missingPrerequisites.map((p) => p.title).join(', ')}
@@ -39,7 +46,7 @@ function Card({ c }: { c: ChallengeListItem }) {
         <CategoryBadge category={c.category} />
         <DifficultyBadge difficulty={c.difficulty} />
       </div>
-      <div className="mt-auto flex items-center justify-between border-t border-border pt-2 text-xs text-fg-muted">
+      <div className="mt-auto flex items-center justify-between pt-3 text-xs text-fg-muted">
         <PointsBadge current={c.currentPoints} base={c.basePoints} min={c.minPoints} />
         <span>{c.solveCount} solves</span>
       </div>
@@ -71,15 +78,15 @@ export default function Challenges() {
   });
 
   return (
-    <div className="space-y-6">
-      <Prompt cursor className="text-2xl">
+    <div className="space-y-8">
+      <Prompt cursor className="text-3xl">
         ls challenges
       </Prompt>
 
       <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => setCat('ALL')}
-          className={cn('rounded border px-3 py-1 text-xs', cat === 'ALL' ? 'border-accent text-accent' : 'border-border text-fg-muted')}
+          className={cn(chip, cat === 'ALL' ? chipOn : chipOff)}
         >
           All
         </button>
@@ -87,7 +94,7 @@ export default function Challenges() {
           <button
             key={c}
             onClick={() => setCat(c)}
-            className={cn('rounded border px-3 py-1 text-xs', cat === c ? 'border-accent text-accent' : 'border-border text-fg-muted hover:text-fg')}
+            className={cn(chip, cat === c ? chipOn : chipOff)}
           >
             {c[0] + c.slice(1).toLowerCase()} {counts[c] ? `(${counts[c]})` : ''}
           </button>
@@ -103,7 +110,7 @@ export default function Challenges() {
           <button
             key={s}
             onClick={() => setStatus(s)}
-            className={cn('rounded px-2 py-1', status === s ? 'bg-overlay text-accent' : 'text-fg-muted hover:text-fg')}
+            className={cn('rounded-full px-3 py-1', status === s ? 'bg-bg text-accent shadow-nm-inset-sm' : 'text-fg-muted hover:text-fg')}
           >
             {s.toLowerCase()}
           </button>
@@ -112,7 +119,7 @@ export default function Challenges() {
           <button
             key={d}
             onClick={() => setDiff(diff === d ? 'ALL' : d)}
-            className={cn('rounded px-2 py-1', diff === d ? 'bg-overlay text-accent' : 'text-fg-muted hover:text-fg')}
+            className={cn('rounded-full px-3 py-1', diff === d ? 'bg-bg text-accent shadow-nm-inset-sm' : 'text-fg-muted hover:text-fg')}
           >
             {d.toLowerCase()}
           </button>
@@ -133,9 +140,11 @@ export default function Challenges() {
         <EmptyState title="No challenges match" hint="Try clearing the filters or search." />
       )}
       {filtered.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((c) => (
-            <Card key={c.id} c={c} />
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((c, i) => (
+            <Reveal key={c.id} index={i}>
+              <Card c={c} />
+            </Reveal>
           ))}
         </div>
       )}

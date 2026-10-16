@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, Minus, Snowflake } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -37,7 +39,7 @@ function TimelineChart() {
     if (!data) return [];
     const times = Array.from(new Set(data.flatMap((t) => t.points.map((p) => p.t)))).sort();
     return times.map((t) => {
-      const row: Record<string, number | string> = { t: new Date(t).toLocaleDateString() };
+      const row: Record<string, number | string> = { t: new Date(t).getTime() };
       for (const team of data) {
         const last = [...team.points].filter((p) => p.t <= t).pop();
         row[team.teamName] = last ? last.score : 0;
@@ -52,10 +54,21 @@ function TimelineChart() {
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={merged} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
         <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-        <XAxis dataKey="t" stroke="var(--fg-muted)" fontSize={11} />
-        <YAxis stroke="var(--fg-muted)" fontSize={11} />
+        <XAxis
+          dataKey="t"
+          type="number"
+          scale="time"
+          domain={['dataMin', 'dataMax']}
+          tickFormatter={(v: number) => format(new Date(v), 'd MMM')}
+          minTickGap={60}
+          stroke="var(--fg-muted)"
+          fontSize={11}
+          tickLine={false}
+        />
+        <YAxis stroke="var(--fg-muted)" fontSize={11} domain={[0, 'auto']} tickLine={false} />
         <Tooltip
-          contentStyle={{ background: 'var(--panel)', border: '1px solid var(--border)', fontFamily: 'var(--font-mono)', fontSize: 12 }}
+          labelFormatter={(v) => format(new Date(Number(v)), 'd MMM, HH:mm')}
+          contentStyle={{ background: 'var(--panel)', border: 'none', borderRadius: 14, boxShadow: 'var(--nm-raised-sm)', fontFamily: 'var(--font-mono)', fontSize: 12 }}
           labelStyle={{ color: 'var(--fg)' }}
         />
         {data.map((team, i) => (
@@ -76,17 +89,21 @@ function TimelineChart() {
 
 function Row({ row, mine }: { row: ScoreRow; mine: boolean }) {
   return (
-    <tr className={cn('border-b border-border', mine && 'bg-accent/5')}>
-      <td className="px-3 py-2 text-center font-mono tabular-nums">
+    <motion.tr
+      layout="position"
+      transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+      className={cn('border-b border-border/60 transition-colors hover:bg-bg/60', mine && 'bg-accent/5')}
+    >
+      <td className="px-5 py-4 text-center font-mono tabular-nums">
         {medal(row.rank) ?? row.rank}
       </td>
-      <td className="px-3 py-2">
+      <td className="px-5 py-4">
         <Link to={`/teams/${row.teamId}`} className="flex items-center gap-2 hover:text-accent">
           <TeamAvatar seed={row.avatarSeed} size={24} />
           <span className={cn('font-mono', mine && 'text-accent')}>{row.teamName}</span>
         </Link>
       </td>
-      <td className="hidden px-3 py-2 sm:table-cell">
+      <td className="hidden px-5 py-4 sm:table-cell">
         <div className="flex gap-1" aria-label="solves by category">
           {CATS.map((c) => (
             <span
@@ -98,10 +115,10 @@ function Row({ row, mine }: { row: ScoreRow; mine: boolean }) {
           ))}
         </div>
       </td>
-      <td className="px-3 py-2 text-right font-mono tabular-nums text-accent">{row.score}</td>
-      <td className="hidden px-3 py-2 text-right tabular-nums text-fg-muted md:table-cell">{row.solves}</td>
-      <td className="px-3 py-2 text-right"><Delta delta={row.rankDelta} /></td>
-    </tr>
+      <td className="px-5 py-4 text-right font-mono tabular-nums text-accent">{row.score}</td>
+      <td className="hidden px-5 py-4 text-right tabular-nums text-fg-muted md:table-cell">{row.solves}</td>
+      <td className="px-5 py-4 text-right"><Delta delta={row.rankDelta} /></td>
+    </motion.tr>
   );
 }
 
@@ -114,16 +131,16 @@ export default function ScoreboardPage() {
   const myTeamId = me?.team?.id;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Prompt cursor className="text-2xl">
+        <Prompt cursor className="text-3xl">
           top --live
         </Prompt>
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="search team" className="h-8 w-48" />
       </div>
 
       {data?.frozen && (
-        <div className="flex items-center gap-2 rounded border border-info/50 bg-info/10 px-4 py-2 text-sm text-info">
+        <div className="flex items-center gap-2 rounded-2xl bg-bg px-5 py-3 text-sm text-info shadow-nm-inset-sm">
           <Snowflake size={16} /> Scoreboard frozen{data.frozenAt ? ` at ${new Date(data.frozenAt).toLocaleString()}` : ''} — final standings reveal when the event ends.
         </div>
       )}
@@ -141,12 +158,12 @@ export default function ScoreboardPage() {
             <table className="w-full text-sm">
               <thead className="text-xs uppercase tracking-wider text-fg-muted">
                 <tr className="border-b border-border">
-                  <th className="px-3 py-2">#</th>
-                  <th className="px-3 py-2 text-left">Team</th>
-                  <th className="hidden px-3 py-2 text-left sm:table-cell">Categories</th>
-                  <th className="px-3 py-2 text-right">Score</th>
-                  <th className="hidden px-3 py-2 text-right md:table-cell">Solves</th>
-                  <th className="px-3 py-2 text-right">Δ</th>
+                  <th className="px-5 py-4">#</th>
+                  <th className="px-5 py-4 text-left">Team</th>
+                  <th className="hidden px-5 py-4 text-left sm:table-cell">Categories</th>
+                  <th className="px-5 py-4 text-right">Score</th>
+                  <th className="hidden px-5 py-4 text-right md:table-cell">Solves</th>
+                  <th className="px-5 py-4 text-right">Δ</th>
                 </tr>
               </thead>
               <tbody>

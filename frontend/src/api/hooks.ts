@@ -244,6 +244,22 @@ export function useAlerts(enabled: boolean) {
   });
 }
 
+export function useDismissAlert() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/admin/alerts/${id}/dismiss`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.alerts }),
+  });
+}
+
+/** Demo-only: reveal a team's per-team dynamic flag (admin). */
+export function useRevealFlag() {
+  return useMutation({
+    mutationFn: (b: { teamId: string; challengeId: string }) =>
+      api.get<{ flag: string }>(`/admin/teams/${b.teamId}/flag/${b.challengeId}`),
+  });
+}
+
 export function useEventControl() {
   const qc = useQueryClient();
   return useMutation({

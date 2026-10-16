@@ -3,17 +3,19 @@ import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type R
 import { cn } from '../lib/cn';
 
 // ---- Button ----
+// Soft-UI: raised by default, pressed-in while held. Colors/shadows come from theme tokens
+// (see .nm-btn* in globals.css), so every preset restyles it automatically.
 const button = cva(
-  'inline-flex items-center justify-center gap-2 rounded font-mono text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]',
+  'nm-btn inline-flex items-center justify-center gap-2 font-mono text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]',
   {
     variants: {
       variant: {
-        primary: 'bg-accent text-accent-fg hover:brightness-110 glow-box',
-        outline: 'border border-border-strong text-fg hover:bg-overlay',
-        ghost: 'text-fg-muted hover:text-fg hover:bg-overlay',
-        danger: 'bg-danger text-[#180404] hover:brightness-110',
+        primary: 'nm-btn-primary',
+        outline: '',
+        ghost: 'nm-btn-ghost',
+        danger: 'nm-btn-danger',
       },
-      size: { sm: 'h-8 px-3', md: 'h-10 px-4', icon: 'h-9 w-9' },
+      size: { sm: 'h-8 px-3.5', md: 'h-10 px-5', icon: 'h-10 w-10 !rounded-full' },
     },
     defaultVariants: { variant: 'primary', size: 'md' },
   },
@@ -40,13 +42,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = 'Button';
 
-// ---- Input ----
+// ---- Input (recessed into the surface) ----
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   ({ className, ...props }, ref) => (
     <input
       ref={ref}
       className={cn(
-        'h-10 w-full rounded border border-border bg-overlay px-3 font-mono text-sm text-fg placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-none',
+        'h-11 w-full rounded-[14px] border border-transparent bg-bg px-4 font-mono text-sm text-fg shadow-nm-inset-sm placeholder:text-fg-muted focus-visible:border-accent focus-visible:outline-none',
         className,
       )}
       {...props}
@@ -65,7 +67,7 @@ export function Spinner({ className }: { className?: string }) {
   );
 }
 
-// ---- Badge ----
+// ---- Badge (a small pressed-in chip) ----
 export function Badge({
   children,
   className,
@@ -78,10 +80,10 @@ export function Badge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded border px-2 py-0.5 text-xs font-medium',
+        'inline-flex items-center gap-1 rounded-full bg-bg px-2.5 py-0.5 text-xs font-medium shadow-nm-inset-sm',
         className,
       )}
-      style={color ? { color, borderColor: color } : undefined}
+      style={color ? { color } : undefined}
     >
       {children}
     </span>
@@ -90,10 +92,10 @@ export function Badge({
 
 // ---- Skeleton ----
 export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn('animate-pulse rounded bg-overlay', className)} />;
+  return <div className={cn('animate-pulse rounded-2xl bg-panel shadow-nm-inset-sm', className)} />;
 }
 
-// ---- EmptyState ----
+// ---- EmptyState (a shallow well) ----
 export function EmptyState({
   title,
   hint,
@@ -106,7 +108,7 @@ export function EmptyState({
   icon?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border px-6 py-12 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-3xl bg-bg px-6 py-12 text-center shadow-nm-inset">
       {icon && <div className="text-fg-muted">{icon}</div>}
       <div className="font-mono text-sm text-fg">{title}</div>
       {hint && <div className="max-w-md text-xs text-fg-muted">{hint}</div>}

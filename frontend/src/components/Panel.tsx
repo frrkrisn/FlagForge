@@ -16,7 +16,7 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section className={cn('term-window', className)}>
+    <section className={cn('term-window flex flex-col', className)}>
       {title !== undefined && (
         <header className="term-titlebar">
           <span className="term-dot" style={{ background: 'var(--danger)' }} />
@@ -26,7 +26,7 @@ export function Panel({
           {actions && <span className="ml-auto flex items-center gap-2">{actions}</span>}
         </header>
       )}
-      <div className={cn('p-4', bodyClassName)}>{children}</div>
+      <div className={cn('min-h-0 flex-1 p-6 sm:p-7', bodyClassName)}>{children}</div>
     </section>
   );
 }

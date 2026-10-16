@@ -106,7 +106,7 @@ export default function TeamPage() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <span className="text-xs text-fg-muted">invite</span>
-            <code className="rounded border border-border bg-overlay px-2 py-1 font-mono text-accent">{team.inviteCode}</code>
+            <code className="rounded-xl bg-bg px-3 py-1.5 font-mono text-accent shadow-nm-inset-sm">{team.inviteCode}</code>
             <Button
               variant="ghost"
               size="icon"

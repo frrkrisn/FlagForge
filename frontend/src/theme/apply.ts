@@ -12,6 +12,7 @@ export function applyTheme(state: ThemeState): void {
   root.dataset.theme = state.preset;
   root.dataset.effects = state.effects.glow ? 'on' : 'off';
   root.dataset.motion = state.effects.motion ? 'on' : 'off';
+  root.dataset.depth = state.effects.depth ? 'on' : 'off';
   root.dataset.density = state.density;
 
   if (state.accent) {

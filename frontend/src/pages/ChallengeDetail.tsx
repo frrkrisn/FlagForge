@@ -21,13 +21,13 @@ function HintRow({ hint, challengeId }: { hint: Hint; challengeId: string }) {
   const [confirming, setConfirming] = useState(false);
   if (hint.unlocked) {
     return (
-      <div className="rounded border border-border bg-overlay p-3 text-sm">
+      <div className="rounded-2xl bg-bg p-4 text-sm shadow-nm-inset-sm">
         <span className="text-fg-muted">hint:</span> <span className="text-fg">{hint.text}</span>
       </div>
     );
   }
   return (
-    <div className="flex items-center justify-between rounded border border-border p-3 text-sm">
+    <div className="flex items-center justify-between rounded-2xl bg-panel p-4 text-sm shadow-nm-raised-sm">
       <span className="text-fg-muted">
         <Lock size={12} className="mr-1 inline" />
         Costs <span className="text-warning">−{hint.cost}</span> pts
@@ -165,7 +165,7 @@ export default function ChallengeDetail() {
                 <a
                   key={a.name}
                   href={`/api/challenges/${c.id}/files/${encodeURIComponent(a.name)}`}
-                  className="flex items-center gap-2 rounded border border-border px-3 py-2 text-sm text-fg hover:border-accent"
+                  className="flex items-center gap-2 rounded-xl bg-panel px-4 py-2 text-sm text-fg shadow-nm-raised-sm transition-shadow hover:text-accent active:shadow-nm-inset-sm"
                 >
                   <Download size={14} /> {a.name}
                   <span className="text-fg-muted">({Math.round(a.size / 1024)} KB)</span>

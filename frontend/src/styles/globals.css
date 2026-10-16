@@ -44,6 +44,15 @@
   --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
   --font-sans: 'JetBrains Mono', ui-monospace, monospace;
   color-scheme: dark;
+
+  /* Soft-UI depth: a light edge (top-left) and a dark edge (bottom-right), both mixed
+     from this theme's own --bg so every preset gets a matching, believable relief. */
+  --nm-hi: color-mix(in srgb, var(--bg) 85%, white);
+  --nm-lo: color-mix(in srgb, var(--bg) 20%, black);
+  --nm-raised: 8px 8px 18px var(--nm-lo), -7px -7px 16px var(--nm-hi);
+  --nm-raised-sm: 5px 5px 11px var(--nm-lo), -4px -4px 10px var(--nm-hi);
+  --nm-inset: inset 6px 6px 12px var(--nm-lo), inset -5px -5px 11px var(--nm-hi);
+  --nm-inset-sm: inset 3px 3px 7px var(--nm-lo), inset -3px -3px 6px var(--nm-hi);
 }
 
 :root[data-theme='cyber'] {
@@ -170,6 +179,17 @@
   --chart-6: #0b8a8a;
   --glow-alpha: 0%;
   color-scheme: light;
+  /* Light theme: a true white highlight and a warm, soft shadow read as paper-on-paper. */
+  --nm-hi: #ffffff;
+  --nm-lo: color-mix(in srgb, var(--bg) 76%, #6f6650);
+}
+
+/* Depth switch: with "Soft depth" off the relief collapses to a flat 1px outline. */
+:root[data-depth='off'] {
+  --nm-raised: 0 0 0 1px var(--border);
+  --nm-raised-sm: 0 0 0 1px var(--border);
+  --nm-inset: inset 0 0 0 1px var(--border);
+  --nm-inset-sm: inset 0 0 0 1px var(--border);
 }
 
 /* Effects master switch: [data-effects='off'] zeroes glow. */
@@ -235,24 +255,91 @@ body {
 /* Terminal window chrome. */
 .term-window {
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 22px;
+  box-shadow: var(--nm-raised);
   overflow: hidden;
 }
 .term-titlebar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  gap: 9px;
+  padding: 14px 26px;
+  /* a hairline "groove" instead of a hard border */
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--nm-lo) 85%, transparent),
+    0 1px 0 color-mix(in srgb, var(--nm-hi) 70%, transparent);
   font-size: 12px;
   color: var(--fg-muted);
 }
 .term-dot {
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
+  box-shadow: 2px 2px 4px var(--nm-lo), -1px -1px 3px var(--nm-hi);
+}
+
+/* ---- Soft-UI controls ---------------------------------------------------- */
+.nm-btn {
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--fg);
+  box-shadow: var(--nm-raised-sm);
+  transition: box-shadow 0.2s ease, color 0.2s ease, filter 0.2s ease, transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.nm-btn:hover:not(:disabled) {
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.nm-btn:active:not(:disabled) {
+  box-shadow: var(--nm-inset-sm);
+  transform: translateY(0) scale(0.985);
+}
+.nm-btn-primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  box-shadow: var(--nm-raised-sm),
+    0 0 var(--glow-blur) color-mix(in srgb, var(--accent) var(--glow-alpha), transparent);
+}
+.nm-btn-primary:hover:not(:disabled) {
+  color: var(--accent-fg);
+  filter: brightness(1.08);
+}
+.nm-btn-primary:active:not(:disabled) {
+  box-shadow: var(--nm-inset-sm);
+}
+.nm-btn-ghost {
+  background: transparent;
+  box-shadow: none;
+  color: var(--fg-muted);
+}
+.nm-btn-ghost:hover:not(:disabled) {
+  color: var(--fg);
+  box-shadow: var(--nm-raised-sm);
+}
+.nm-btn-danger {
+  background: var(--danger);
+  color: var(--bg);
+}
+.nm-btn-danger:hover:not(:disabled) {
+  color: var(--bg);
+  filter: brightness(1.08);
+}
+
+/* Native fields share one recessed look. The id selector out-ranks utility classes
+   such as `border-border bg-overlay` that older markup still carries. */
+#root select,
+#root textarea,
+#root input[type='datetime-local'] {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid transparent;
+  border-radius: 14px;
+  box-shadow: var(--nm-inset-sm);
+}
+#root select:focus-visible,
+#root textarea:focus-visible,
+#root input[type='datetime-local']:focus-visible {
+  outline: none;
+  border-color: var(--accent);
 }
 
 /* Scanlines + vignette overlays (rendered by the app, toggled by effects). */

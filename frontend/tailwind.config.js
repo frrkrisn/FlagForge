@@ -38,13 +38,18 @@ export default {
         sans: 'var(--font-sans)',
       },
       borderRadius: {
-        sm: '2px',
-        DEFAULT: '4px',
-        md: '4px',
-        lg: '8px',
+        sm: '6px',
+        DEFAULT: '10px',
+        md: '12px',
+        lg: '16px',
       },
       boxShadow: {
         glow: '0 0 var(--glow-blur) color-mix(in srgb, var(--accent) var(--glow-alpha), transparent)',
+        // Soft-UI depth. Derived from each theme's --bg, so every preset gets matching light/dark edges.
+        'nm-raised': 'var(--nm-raised)',
+        'nm-raised-sm': 'var(--nm-raised-sm)',
+        'nm-inset': 'var(--nm-inset)',
+        'nm-inset-sm': 'var(--nm-inset-sm)',
       },
       keyframes: {
         blink: { '0%,49%': { opacity: '1' }, '50%,100%': { opacity: '0' } },

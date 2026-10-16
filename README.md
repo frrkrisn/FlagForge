@@ -80,7 +80,25 @@ node scripts/seed.mjs http://localhost:8080
 ```
 
 Then open the app. Log in as `admin` / `adminpassword`, or any team captain (e.g. `nullpoin1` /
-`password123`). Re-running requires a fresh data dir (delete `data/runtime/state.json`).
+`password123`).
+
+The seed now creates **26 challenges and 30 teams** (`scripts/ctf-data.mjs`) and is safe to re-run:
+it extends an existing event instead of failing. Extra options and companions:
+
+```bash
+node scripts/seed.mjs http://localhost:8080 --alerts   # also stage 3 flag-sharing incidents
+node scripts/live.mjs http://localhost:8080            # keep solving/missing/hinting live (Ctrl+C to stop)
+```
+
+**Make the history look multi-day.** A fresh seed lands within a few seconds, so the timeline chart
+is a vertical line. Stop the server, spread the history over ~3.5 days, then start it again:
+
+```bash
+node scripts/backdate.mjs data/runtime/state.json 3.5
+```
+
+(Anti-cheat alerts and the activity feed are held in server memory, so re-run
+`node scripts/seed.mjs --alerts` after restarting the server to bring the alerts back.)
 
 ## Project status
 

@@ -22,8 +22,8 @@ export function CategoryBadge({ category }: { category: Category }) {
   const color = categoryColor(category);
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 text-xs font-medium"
-      style={{ color, borderColor: color }}
+      className="inline-flex items-center gap-1.5 rounded-full bg-bg px-2.5 py-1 text-xs font-medium shadow-nm-inset-sm"
+      style={{ color }}
     >
       <Icon size={12} aria-hidden />
       {label}

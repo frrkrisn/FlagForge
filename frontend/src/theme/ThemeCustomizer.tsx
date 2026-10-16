@@ -11,7 +11,8 @@ import {
 } from './presets';
 import { useTheme } from './useTheme';
 
-const EFFECTS: { key: 'glow' | 'scanlines' | 'vignette' | 'motion' | 'boot'; label: string }[] = [
+const EFFECTS: { key: 'depth' | 'glow' | 'scanlines' | 'vignette' | 'motion' | 'boot'; label: string }[] = [
+  { key: 'depth', label: 'Soft depth (neumorphic)' },
   { key: 'glow', label: 'Phosphor glow' },
   { key: 'scanlines', label: 'Scanlines' },
   { key: 'vignette', label: 'CRT vignette' },
@@ -37,7 +38,7 @@ export function ThemeCustomizer({ open, onClose }: { open: boolean; onClose: () 
   return (
     <div className="fixed inset-0 z-[60] flex justify-end" role="dialog" aria-label="Theme customizer">
       <button className="absolute inset-0 bg-black/50" aria-label="Close" onClick={onClose} />
-      <div className="relative flex h-full w-full max-w-sm flex-col overflow-y-auto border-l border-border bg-panel">
+      <div className="relative m-3 flex h-[calc(100%-1.5rem)] w-full max-w-sm flex-col overflow-y-auto rounded-3xl bg-panel shadow-nm-raised">
         <header className="term-titlebar sticky top-0">
           <span className="term-dot" style={{ background: 'var(--danger)' }} />
           <span className="term-dot" style={{ background: 'var(--warning)' }} />
@@ -61,8 +62,8 @@ export function ThemeCustomizer({ open, onClose }: { open: boolean; onClose: () 
                     setNote(null);
                   }}
                   className={cn(
-                    'flex flex-col gap-2 rounded border p-2 text-left transition-colors',
-                    theme.preset === p.id ? 'border-accent' : 'border-border hover:border-border-strong',
+                    'flex flex-col gap-2 rounded-xl p-3 text-left transition-shadow',
+                    theme.preset === p.id ? 'bg-bg shadow-nm-inset-sm ring-1 ring-accent' : 'bg-panel shadow-nm-raised-sm',
                   )}
                 >
                   <div className="flex gap-1" aria-hidden>

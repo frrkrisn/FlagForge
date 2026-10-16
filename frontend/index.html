@@ -19,6 +19,7 @@
           root.dataset.theme = t.preset || 'matrix';
           root.dataset.effects = t.effects && t.effects.glow === false ? 'off' : 'on';
           root.dataset.motion = t.effects && t.effects.motion === false ? 'off' : 'on';
+          root.dataset.depth = t.effects && t.effects.depth === false ? 'off' : 'on';
           if (t.accent) root.style.setProperty('--accent', t.accent);
           var fonts = {
             jetbrains: "'JetBrains Mono', ui-monospace, monospace",
@@ -26,7 +27,7 @@
             ibm: "'IBM Plex Mono', ui-monospace, monospace",
           };
           if (t.font && fonts[t.font]) root.style.setProperty('--font-mono', fonts[t.font]);
-          var sizes = { sm: '14px', md: '16px', lg: '18px' };
+          var sizes = { sm: '15px', md: '17px', lg: '19px' };
           if (t.size && sizes[t.size]) root.style.fontSize = sizes[t.size];
         } catch (e) {}
       })();
