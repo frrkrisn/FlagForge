@@ -180,6 +180,51 @@ TEST_CASE("State persists across a restart", "[app][manager][persistence]") {
     REQUIRE_NOTHROW(reloaded.login("alice", "password123"));  // password hash survived
 }
 
+TEST_CASE("Alerts and the activity feed survive a restart", "[app][manager][persistence]") {
+    std::string dir;
+    {
+        auto h = makeHarness();
+        dir = h.dir;
+        CTFManager& mgr = *h.mgr;
+        auto admin = mgr.registerUser("admin", "admin@x.com", "password123");
+        auto alice = mgr.registerUser("alice", "alice@x.com", "password123");
+        auto bob = mgr.registerUser("bob", "bob@x.com", "password123");
+        auto teamA = mgr.createTeam(alice.me.id, "Alpha");
+        mgr.createTeam(bob.me.id, "Bravo");
+
+        ChallengeSpec dyn;
+        dyn.id = "c_1";
+        dyn.title = "Team Token";
+        dyn.basePoints = 300;
+        dyn.scoring = ScoringKind::DynamicScore;
+        dyn.flagType = FlagType::Dynamic;
+        mgr.createChallenge(admin.me.id, dyn);
+        mgr.startEvent(admin.me.id);
+
+        // Bob submits Alice's per-team flag: a flag-sharing alert is raised and then dismissed.
+        const std::string aliceFlag = mgr.revealTeamFlag(admin.me.id, teamA.id, "c_1");
+        REQUIRE(mgr.submitFlag(bob.me.id, "c_1", aliceFlag).result == SubmitResult::FlagSharing);
+        auto alerts = mgr.alerts(admin.me.id);
+        REQUIRE(alerts.size() == 1);
+        mgr.dismissAlert(admin.me.id, alerts[0].id);
+    }
+
+    CTFManager reloaded("test-secret", dir, std::make_unique<ctftest::FakeClock>());
+    reloaded.load();
+    auto admin = reloaded.login("admin", "password123");
+
+    auto alerts = reloaded.alerts(admin.me.id);
+    REQUIRE(alerts.size() == 1);
+    REQUIRE(alerts[0].kind == events::AlertKind::FlagSharing);
+    REQUIRE(alerts[0].status == events::AlertStatus::Dismissed);  // the dismissal persisted too
+
+    auto feed = reloaded.feedSince(0);
+    REQUIRE_FALSE(feed.empty());
+    bool sawSharing = false;
+    for (const auto& e : feed) sawSharing = sawSharing || e.type == events::EventType::FlagSharing;
+    REQUIRE(sawSharing);
+}
+
 TEST_CASE("Challenge ids do not collide after a restart", "[app][manager][persistence]") {
     auto spec = [] {
         ChallengeSpec s;

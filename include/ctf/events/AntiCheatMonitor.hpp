@@ -25,6 +25,10 @@ enum class AlertStatus { Open, Dismissed };
 const char* toString(AlertKind kind) noexcept;
 const char* toString(AlertStatus status) noexcept;
 
+/// Parse the wire form ("FLAG_SHARING", "OPEN", ...). Throw ValidationException if unknown.
+AlertKind alertKindFromString(const std::string& s);
+AlertStatus alertStatusFromString(const std::string& s);
+
 struct Alert {
     AlertId id;
     AlertKind kind;
@@ -53,6 +57,13 @@ public:
     std::vector<Alert> alerts() const { return alerts_; }
     std::vector<Alert> openAlerts() const;
     void dismiss(const AlertId& alertId);
+
+    /// Id the next raised alert will get (persisted so ids stay unique across restarts).
+    long long nextAlertId() const noexcept { return nextAlertId_; }
+
+    /// Restore previously saved alerts. Detection windows (burst / same-wrong-flag) are
+    /// short-lived and intentionally start fresh.
+    void restore(std::vector<Alert> alerts, long long nextAlertId);
 
 private:
     void raise(AlertKind kind, TimePoint at, std::string evidence, std::vector<TeamId> teams,

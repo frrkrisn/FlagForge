@@ -22,6 +22,19 @@ std::vector<Event> ActivityFeed::since(long long sinceId) const {
     return out;
 }
 
+void ActivityFeed::restore(std::vector<Entry> entries, long long nextId) {
+    ring_.assign(entries.begin(), entries.end());
+    while (ring_.size() > capacity_) {
+        ring_.pop_front();
+    }
+    long long next = nextId;
+    for (const auto& [id, event] : ring_) {
+        (void)event;
+        if (id >= next) next = id + 1;
+    }
+    nextId_ = next < 1 ? 1 : next;
+}
+
 // --- EventLog ---------------------------------------------------------------
 void EventLog::onEvent(const Event& event) {
     entries_.push_back(event);

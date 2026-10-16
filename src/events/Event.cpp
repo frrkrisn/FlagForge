@@ -1,6 +1,22 @@
 #include "ctf/events/Event.hpp"
 
+#include "ctf/Exceptions.hpp"
+
 namespace ctf::events {
+
+EventType eventTypeFromString(const std::string& s) {
+    static const EventType kAll[] = {
+        EventType::Solve,        EventType::FirstBlood,        EventType::WrongAttempt,
+        EventType::HintUnlocked, EventType::TeamCreated,       EventType::TeamJoined,
+        EventType::EventStarted, EventType::EventPaused,       EventType::EventResumed,
+        EventType::EventEnded,   EventType::FlagSharing,       EventType::CooldownTriggered,
+        EventType::Announcement,
+    };
+    for (EventType t : kAll) {
+        if (s == toString(t)) return t;
+    }
+    throw ValidationException("Unknown event type: " + s);
+}
 
 const char* toString(EventType type) noexcept {
     switch (type) {

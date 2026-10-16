@@ -54,6 +54,52 @@ json hintUnlockToJson(const HintUnlock& h) {
                 {"timestamp", toIso8601(h.timestamp)}};
 }
 
+json eventToJson(const events::Event& e) {
+    json j{{"type", events::toString(e.type)},
+           {"timestamp", toIso8601(e.timestamp)},
+           {"message", e.message},
+           {"points", e.points}};
+    if (e.teamId) j["teamId"] = *e.teamId;
+    if (e.otherTeamId) j["otherTeamId"] = *e.otherTeamId;
+    if (e.challengeId) j["challengeId"] = *e.challengeId;
+    return j;
+}
+
+events::Event eventFromJson(const json& j) {
+    events::Event e;
+    e.type = events::eventTypeFromString(j.at("type").get<std::string>());
+    e.timestamp = fromIso8601(j.at("timestamp").get<std::string>());
+    e.message = j.value("message", std::string());
+    e.points = j.value("points", 0);
+    if (j.contains("teamId")) e.teamId = j["teamId"].get<std::string>();
+    if (j.contains("otherTeamId")) e.otherTeamId = j["otherTeamId"].get<std::string>();
+    if (j.contains("challengeId")) e.challengeId = j["challengeId"].get<std::string>();
+    return e;
+}
+
+json alertToJson(const events::Alert& a) {
+    json j{{"id", a.id},
+           {"kind", events::toString(a.kind)},
+           {"status", events::toString(a.status)},
+           {"at", toIso8601(a.at)},
+           {"evidence", a.evidence},
+           {"teams", a.teams}};
+    if (a.challengeId) j["challengeId"] = *a.challengeId;
+    return j;
+}
+
+events::Alert alertFromJson(const json& j) {
+    events::Alert a;
+    a.id = j.at("id").get<std::string>();
+    a.kind = events::alertKindFromString(j.at("kind").get<std::string>());
+    a.status = events::alertStatusFromString(j.value("status", std::string("OPEN")));
+    a.at = fromIso8601(j.at("at").get<std::string>());
+    a.evidence = j.value("evidence", std::string());
+    a.teams = j.value("teams", std::vector<std::string>{});
+    if (j.contains("challengeId")) a.challengeId = j["challengeId"].get<std::string>();
+    return a;
+}
+
 std::unique_ptr<Challenge> deserializeChallenge(const json& j) {
     const auto id = j.at("id").get<std::string>();
     const auto title = j.at("title").get<std::string>();
@@ -926,6 +972,7 @@ void CTFManager::dismissAlert(const UserId& adminId, const AlertId& alertId) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
     requireAdmin(adminId);
     antiCheat_->dismiss(alertId);
+    persistLocked();  // a dismissal is admin state: keep it across restarts
 }
 
 Announcement CTFManager::postAnnouncement(const UserId& adminId, const std::string& title,
@@ -1047,6 +1094,21 @@ nlohmann::json CTFManager::toJson() const {
                             {"timestamp", toIso8601(a.timestamp)}});
     }
     doc["announcements"] = std::move(anns);
+
+    // Anti-cheat alerts and the public activity feed survive a restart.
+    json alerts = json::array();
+    for (const events::Alert& a : antiCheat_->alerts()) alerts.push_back(alertToJson(a));
+    doc["alerts"] = std::move(alerts);
+    doc["nextAlertId"] = antiCheat_->nextAlertId();
+
+    json feed = json::array();
+    for (const auto& [id, event] : feed_->entries()) {
+        json entry = eventToJson(event);
+        entry["id"] = id;
+        feed.push_back(std::move(entry));
+    }
+    doc["feed"] = std::move(feed);
+    doc["nextFeedId"] = feed_->latestId() + 1;
     return doc;
 }
 
@@ -1157,6 +1219,16 @@ void CTFManager::fromJson(const nlohmann::json& doc) {
         a.timestamp = fromIso8601(ja.at("timestamp").get<std::string>());
         announcements_.push_back(std::move(a));
     }
+
+    std::vector<events::Alert> alerts;
+    for (const json& ja : doc.value("alerts", json::array())) alerts.push_back(alertFromJson(ja));
+    antiCheat_->restore(std::move(alerts), doc.value("nextAlertId", 1LL));
+
+    std::vector<events::ActivityFeed::Entry> feed;
+    for (const json& jf : doc.value("feed", json::array())) {
+        feed.emplace_back(jf.at("id").get<long long>(), eventFromJson(jf));
+    }
+    feed_->restore(std::move(feed), doc.value("nextFeedId", 1LL));
 }
 
 ChallengeDetailDto CTFManager::detailForAdmin(const UserId& adminId,

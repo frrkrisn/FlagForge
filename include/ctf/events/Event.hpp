@@ -30,6 +30,9 @@ enum class EventType {
 
 const char* toString(EventType type) noexcept;
 
+/// Parse the wire form ("SOLVE", "FIRST_BLOOD", ...). Throws ValidationException if unknown.
+EventType eventTypeFromString(const std::string& s);
+
 /// An immutable notification. Optional ids are set when relevant to the event.
 struct Event {
     EventType type;

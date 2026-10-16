@@ -1,7 +1,10 @@
 #include "ctf/events/AntiCheatMonitor.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <string>
+
+#include "ctf/Exceptions.hpp"
 
 namespace ctf::events {
 
@@ -20,6 +23,32 @@ const char* toString(AlertStatus status) noexcept {
         case AlertStatus::Dismissed: return "DISMISSED";
     }
     return "OPEN";
+}
+
+AlertKind alertKindFromString(const std::string& s) {
+    if (s == "FLAG_SHARING") return AlertKind::FlagSharing;
+    if (s == "BURST_SUBMISSIONS") return AlertKind::BurstSubmissions;
+    if (s == "SAME_WRONG_FLAG_MULTI_TEAM") return AlertKind::SameWrongFlagMultiTeam;
+    throw ValidationException("Unknown alert kind: " + s);
+}
+
+AlertStatus alertStatusFromString(const std::string& s) {
+    if (s == "OPEN") return AlertStatus::Open;
+    if (s == "DISMISSED") return AlertStatus::Dismissed;
+    throw ValidationException("Unknown alert status: " + s);
+}
+
+void AntiCheatMonitor::restore(std::vector<Alert> alerts, long long nextAlertId) {
+    alerts_ = std::move(alerts);
+    long long next = nextAlertId;
+    for (const Alert& a : alerts_) {
+        // ids look like "al_<n>"; never hand out one that already exists
+        if (a.id.rfind("al_", 0) == 0) {
+            const long long n = std::atoll(a.id.c_str() + 3);
+            if (n >= next) next = n + 1;
+        }
+    }
+    nextAlertId_ = next < 1 ? 1 : next;
 }
 
 void AntiCheatMonitor::raise(AlertKind kind, TimePoint at, std::string evidence,

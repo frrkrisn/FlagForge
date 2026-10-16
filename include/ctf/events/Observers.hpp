@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <deque>
+#include <utility>
 #include <vector>
 
 #include "ctf/events/Event.hpp"
@@ -27,6 +28,15 @@ public:
 
     /// Id of the most recent event (0 if empty).
     long long latestId() const noexcept { return nextId_ - 1; }
+
+    using Entry = std::pair<long long, Event>;  ///< (feed id, event)
+
+    /// The retained entries, oldest first (used by persistence).
+    const std::deque<Entry>& entries() const noexcept { return ring_; }
+
+    /// Replace the feed with previously saved entries. The next id continues after the
+    /// largest restored id (or \p nextId, whichever is greater) so ids never repeat.
+    void restore(std::vector<Entry> entries, long long nextId);
 
 private:
     std::size_t capacity_;
