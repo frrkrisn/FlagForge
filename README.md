@@ -97,8 +97,34 @@ is a vertical line. Stop the server, spread the history over ~3.5 days, then sta
 node scripts/backdate.mjs data/runtime/state.json 3.5
 ```
 
-(Anti-cheat alerts and the activity feed are held in server memory, so re-run
-`node scripts/seed.mjs --alerts` after restarting the server to bring the alerts back.)
+(Anti-cheat alerts and the activity feed are saved with the rest of the state, so they survive a restart.)
+
+## Challenge host and pwn services
+
+The web and pwn challenges are backed by a separate, intentionally vulnerable process. Run it in a
+third terminal (Node 22+):
+
+```bash
+node challenge-host/server.mjs
+```
+
+It serves the web challenges on `:9001` and three simulated `nc` services: `nc localhost 9101`
+(Overflow 101), `9102` (Format Fiasco), `9103` (Return Home). They model the vulnerable C programs and
+never execute player input. The in-browser Terminal talks to them too. Tests: `node --test challenge-host/services.test.mjs`.
+
+## Feature tour
+
+| Page | What it does |
+|---|---|
+| Challenges (`cards` / `tree`) | Filterable cards, or the prerequisite skill tree |
+| Challenge page | Files with SHA-256 (some unique per team), hints, and the official writeup once you solve it |
+| Terminal | `ls`, `cat`, `submit`, `hint`, `get`, `nc overflow` ... the whole CTF from a command line |
+| Scoreboard, Replay | Live board and a scrubbable playback of the whole event |
+| Projector (`/projector`) | Full-screen mission-control view for a big screen |
+| Team | Members, invite code and a private war-room chat |
+| Profiles | Skill radar per category and derived badges |
+| Admin | Challenges (with attachments and writeups), teams, anti-cheat rules and alerts, event control |
+| `/metrics` | Prometheus metrics for monitoring |
 
 ## Project status
 
