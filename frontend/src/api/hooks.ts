@@ -7,6 +7,7 @@ import {
 import { api } from './client';
 import type {
   AdminSubmission,
+  ChatMessage,
   Alert,
   Announcement,
   ChallengeDetail,
@@ -347,5 +348,23 @@ export function usePostAnnouncement() {
     mutationFn: (b: { title: string; body: string; severity: string }) =>
       api.post<Announcement>('/admin/announcements', b),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.announcements }),
+  });
+}
+
+// ---- team war-room chat ----
+export function useTeamChat(enabled = true) {
+  return useQuery<ChatMessage[]>({
+    queryKey: ['teams', 'me', 'chat'],
+    queryFn: async () => (await api.get<{ messages: ChatMessage[] }>('/teams/me/chat')).messages,
+    refetchInterval: 3_000,
+    enabled,
+  });
+}
+
+export function usePostChat() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (text: string) => api.post<ChatMessage>('/teams/me/chat', { text }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['teams', 'me', 'chat'] }),
   });
 }

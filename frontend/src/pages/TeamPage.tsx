@@ -13,6 +13,7 @@ import {
   useRegenInvite,
 } from '../api/hooks';
 import { Panel, Prompt } from '../components/Panel';
+import { TeamChat } from '../components/TeamChat';
 import { TeamAvatar } from '../components/TeamAvatar';
 import { Button, EmptyState, Input, Skeleton } from '../components/ui';
 
@@ -125,6 +126,10 @@ export default function TeamPage() {
             )}
           </div>
         </div>
+      </Panel>
+
+      <Panel title="~/team/war-room">
+        <TeamChat myId={me.id} />
       </Panel>
 
       <Panel title="~/team/members">

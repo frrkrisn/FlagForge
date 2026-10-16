@@ -389,3 +389,12 @@ Agent at it, or just `curl localhost:8080/metrics`.
 ### Skills and badges
 
 `skills` is a fixed-order list (WEB, CRYPTO, FORENSICS, REVERSE, PWN, MISC) of `solved`/`total` visible challenges and the base `points` solved, used to draw the profile radar. Badges are derived from the solve history, never stored: `FIRST_BLOOD`, `ON_THE_BOARD` (1 solve), `MASTER_<CATEGORY>` (every challenge in a category with at least 2), `ALL_ROUNDER` (4+ categories), `HARD_HITTER` (a hard solve), `VETERAN` (10+ solves).
+
+### Team war-room chat
+
+| Endpoint | Body | Returns |
+|---|---|---|
+| `GET /api/teams/me/chat?since=<id>` | — | `{ "messages": [{ id, userId, username, at, text }] }`, oldest first, only ids greater than `since` |
+| `POST /api/teams/me/chat` | `{ "text": "…" }` (1–500 chars after trimming) | the stored message |
+
+Only members of the team can read or post. The last 300 messages per team are kept and survive a restart.

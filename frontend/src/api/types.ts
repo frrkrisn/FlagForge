@@ -203,3 +203,11 @@ export interface AdminSubmission {
   challengeTitle: string;
   result: SubmitResult;
 }
+
+export interface ChatMessage {
+  id: number;
+  userId: string;
+  username: string;
+  at: string;
+  text: string;
+}

@@ -192,6 +192,15 @@ struct StatsDto {
     std::map<std::string, std::size_t> submissionsByResult;  ///< "CORRECT" -> n
 };
 
+/// One message in a team's private war-room chat.
+struct ChatMessageDto {
+    long long id = 0;
+    UserId userId;
+    std::string username;
+    TimePoint at{};
+    std::string text;
+};
+
 /// Authentication result: the user plus the freshly minted session token.
 struct AuthOutcome {
     MeDto me;

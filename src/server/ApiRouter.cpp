@@ -217,6 +217,10 @@ json toJson(const Announcement& a) {
                 {"severity", toString(a.severity)}, {"at", jTime(a.timestamp)}};
 }
 
+json toJson(const ChatMessageDto& m) {
+    return json{{"id", m.id}, {"userId", m.userId}, {"username", m.username}, {"at", jTime(m.at)}, {"text", m.text}};
+}
+
 json toJson(const SubmissionDto& s) {
     return json{{"id", s.id},         {"at", jTime(s.at)}, {"teamName", s.teamName},
                 {"playerName", s.playerName}, {"challengeTitle", s.challengeTitle},
@@ -406,6 +410,21 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
     });
     server.Get("/api/teams/me", [this, &mgr](const httplib::Request& req, httplib::Response& res) {
         guarded(res, [&] { return toJson(mgr.myTeam(requireUser(req))); });
+    });
+    server.Get("/api/teams/me/chat", [this, &mgr](const httplib::Request& req, httplib::Response& res) {
+        guarded(res, [&] {
+            long long since = 0;
+            if (req.has_param("since")) since = std::stoll(req.get_param_value("since"));
+            json arr = json::array();
+            for (const auto& m : mgr.teamChat(requireUser(req), since)) arr.push_back(toJson(m));
+            return json{{"messages", arr}};
+        });
+    });
+    server.Post("/api/teams/me/chat", [this, &mgr](const httplib::Request& req, httplib::Response& res) {
+        guarded(res, [&] {
+            const UserId uid = requireUser(req);
+            return toJson(mgr.postChat(uid, parseBody(req).at("text").get<std::string>()));
+        });
     });
     server.Post("/api/teams/me/kick", [this, &mgr](const httplib::Request& req, httplib::Response& res) {
         guarded(res, [&] {

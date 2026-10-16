@@ -8,6 +8,8 @@
 ///        reads, unique lock for writes — PLAYBOOK §3.2). It contains all game rules;
 ///        the server contains none.
 
+#include <deque>
+#include <map>
 #include <memory>
 #include <optional>
 #include <shared_mutex>
@@ -114,6 +116,12 @@ public:
     long long latestFeedId() const;
     std::vector<Announcement> announcements() const;
 
+    // --- team war-room chat (members of the team only) ---------------------
+    /// Messages with id > sinceId, oldest first.
+    std::vector<ChatMessageDto> teamChat(const UserId& userId, long long sinceId) const;
+    /// Post to the caller's own team. Text is trimmed; 1-500 chars.
+    ChatMessageDto postChat(const UserId& userId, const std::string& text);
+
     // --- admin -------------------------------------------------------------
     ChallengeDetailDto createChallenge(const UserId& adminId, const ChallengeSpec& spec);
     ChallengeDetailDto editChallenge(const UserId& adminId, const ChallengeId& challengeId,
@@ -198,6 +206,8 @@ private:
 
     std::vector<Submission> submissions_;
     std::vector<Announcement> announcements_;
+    std::map<TeamId, std::deque<ChatMessageDto>> chat_;  ///< per-team, capped
+    long long nextChatId_ = 1;
 
     events::EventBus bus_;
     std::shared_ptr<events::ActivityFeed> feed_;

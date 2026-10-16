@@ -1050,6 +1050,41 @@ Announcement CTFManager::postAnnouncement(const UserId& adminId, const std::stri
     return a;
 }
 
+std::vector<ChatMessageDto> CTFManager::teamChat(const UserId& userId, long long sinceId) const {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    const Team& team = requireTeamOf(userId);
+    std::vector<ChatMessageDto> out;
+    const auto it = chat_.find(team.id());
+    if (it == chat_.end()) return out;
+    for (const ChatMessageDto& m : it->second) {
+        if (m.id > sinceId) out.push_back(m);
+    }
+    return out;
+}
+
+ChatMessageDto CTFManager::postChat(const UserId& userId, const std::string& rawText) {
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    const Team& team = requireTeamOf(userId);
+    static const char* const kSpace = " \t\r\n";
+    const auto first = rawText.find_first_not_of(kSpace);
+    if (first == std::string::npos) throw ValidationException("Message cannot be empty");
+    const auto last = rawText.find_last_not_of(kSpace);
+    const std::string text = rawText.substr(first, last - first + 1);
+    if (text.size() > 500) throw ValidationException("Message is too long (500 characters max)");
+
+    ChatMessageDto m;
+    m.id = nextChatId_++;
+    m.userId = userId;
+    m.username = users_.at(userId).username();
+    m.at = clock_->now();
+    m.text = text;
+    auto& room = chat_[team.id()];
+    room.push_back(m);
+    while (room.size() > 300) room.pop_front();
+    persistLocked();
+    return m;
+}
+
 std::string CTFManager::revealTeamFlag(const UserId& adminId, const TeamId& teamId,
                                        const ChallengeId& challengeId) const {
     std::shared_lock<std::shared_mutex> lock(mutex_);
@@ -1295,6 +1330,18 @@ nlohmann::json CTFManager::toJson() const {
     }
     doc["announcements"] = std::move(anns);
 
+    json chat = json::object();
+    for (const auto& [teamId, room] : chat_) {
+        json arr = json::array();
+        for (const ChatMessageDto& m : room) {
+            arr.push_back(json{{"id", m.id}, {"userId", m.userId}, {"username", m.username},
+                               {"at", toIso8601(m.at)}, {"text", m.text}});
+        }
+        chat[teamId] = std::move(arr);
+    }
+    doc["chat"] = std::move(chat);
+    doc["nextChatId"] = nextChatId_;
+
     // Anti-cheat alerts and the public activity feed survive a restart.
     json alerts = json::array();
     for (const events::Alert& a : antiCheat_->alerts()) alerts.push_back(alertToJson(a));
@@ -1424,6 +1471,22 @@ void CTFManager::fromJson(const nlohmann::json& doc) {
         a.severity = severityFromString(ja.value("severity", std::string("INFO")));
         a.timestamp = fromIso8601(ja.at("timestamp").get<std::string>());
         announcements_.push_back(std::move(a));
+    }
+
+    nextChatId_ = doc.value("nextChatId", 1LL);
+    if (doc.contains("chat") && doc["chat"].is_object()) {
+        for (const auto& [teamId, arr] : doc["chat"].items()) {
+            auto& room = chat_[teamId];
+            for (const json& jm : arr) {
+                ChatMessageDto m;
+                m.id = jm.value("id", 0LL);
+                m.userId = jm.value("userId", std::string());
+                m.username = jm.value("username", std::string());
+                m.at = fromIso8601(jm.value("at", std::string("1970-01-01T00:00:00Z")));
+                m.text = jm.value("text", std::string());
+                room.push_back(std::move(m));
+            }
+        }
     }
 
     std::vector<events::Alert> alerts;
