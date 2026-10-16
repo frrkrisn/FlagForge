@@ -92,7 +92,8 @@ struct ChallengeListItemDto {
 struct AttachmentDto {
     std::string name;
     std::size_t size = 0;
-    std::string sha256;
+    std::string sha256;         ///< of the file the requesting team actually receives
+    bool personalised = false;  ///< true if each team gets a different version
 };
 
 /// A file ready to send to the client (bytes may be personalised for the requesting team).

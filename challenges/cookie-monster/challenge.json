@@ -1,0 +1,15 @@
+{
+  "key": "cookie",
+  "title": "Cookie Monster",
+  "category": "WEB",
+  "difficulty": "EASY",
+  "points": 100,
+  "scoring": "DECAY",
+  "flag": "CTF{c00kies_are_not_secure}",
+  "hints": [
+    {
+      "text": "Cookies are controlled by the client. Look at how the value is encoded.",
+      "cost": 15
+    }
+  ]
+}

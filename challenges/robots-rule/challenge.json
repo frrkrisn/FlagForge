@@ -1,0 +1,22 @@
+{
+  "key": "robots",
+  "title": "Robots Rule",
+  "category": "WEB",
+  "difficulty": "MEDIUM",
+  "points": 200,
+  "scoring": "DECAY_FIRSTBLOOD",
+  "requires": [
+    "inspect"
+  ],
+  "flag": "CTF{disallow_all_the_things}",
+  "hints": [
+    {
+      "text": "Web crawlers read one special file at the site root.",
+      "cost": 20
+    },
+    {
+      "text": "Try /robots.txt and read the Disallow lines.",
+      "cost": 40
+    }
+  ]
+}

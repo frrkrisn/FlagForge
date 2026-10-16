@@ -1,0 +1,21 @@
+{
+  "key": "rsa",
+  "title": "RSA Rookie",
+  "category": "CRYPTO",
+  "difficulty": "MEDIUM",
+  "points": 320,
+  "scoring": "DECAY_FIRSTBLOOD",
+  "requires": [
+    "xor"
+  ],
+  "flag": "CTF{close_primes_fall_to_fermat}",
+  "hints": [
+    {
+      "text": "RSA is only as strong as the difficulty of factoring n. Look closely at how p and q were chosen.",
+      "cost": 40
+    }
+  ],
+  "files": [
+    "challenge.txt"
+  ]
+}

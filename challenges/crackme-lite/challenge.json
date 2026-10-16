@@ -1,0 +1,21 @@
+{
+  "key": "crackme",
+  "title": "Crackme Lite",
+  "category": "REVERSE",
+  "difficulty": "HARD",
+  "points": 400,
+  "scoring": "DECAY_FIRSTBLOOD",
+  "requires": [
+    "basecamp"
+  ],
+  "flag": "CTF{xor_then_compare_reveals_all}",
+  "hints": [
+    {
+      "text": "The program never stores the key in plain text. Find the loop that checks each character and undo it.",
+      "cost": 50
+    }
+  ],
+  "files": [
+    "crackme.exe"
+  ]
+}

@@ -9,6 +9,7 @@
 #include "ctf/Exceptions.hpp"
 #include "ctf/core/ChallengeGraph.hpp"
 #include "ctf/core/Crypto.hpp"
+#include "ctf/core/FileTransform.hpp"
 #include "ctf/persistence/JsonStore.hpp"
 
 namespace ctf::app {
@@ -688,8 +689,20 @@ ChallengeDetailDto CTFManager::challengeDetail(const UserId& userId,
     ChallengeDetailDto d;
     static_cast<ChallengeListItemDto&>(d) = buildListItem(ch, team);
     d.description = ch.description();
-    for (const Attachment& a : ch.attachments())
-        d.attachments.push_back(AttachmentDto{a.name, a.size, a.sha256});
+    for (const Attachment& a : ch.attachments()) {
+        AttachmentDto ad{a.name, a.size, a.sha256, isPersonalising(a.transform)};
+        if (ad.personalised && team) {
+            // Show the size and hash of THIS team's version, so the player can verify their download.
+            try {
+                const std::string mine = personalise(ch, a, *team, files_.load(ch.id(), a.name));
+                ad.size = mine.size();
+                ad.sha256 = crypto::sha256Hex(mine);
+            } catch (const NotFoundException&) {
+                // file missing on disk: fall back to the template's metadata
+            }
+        }
+        d.attachments.push_back(std::move(ad));
+    }
 
     for (const Hint& h : ch.hints()) {
         HintDto hd;
@@ -1035,25 +1048,43 @@ std::string contentTypeFor(const std::string& name) {
 }
 }  // namespace
 
+std::string CTFManager::personalise(const Challenge& ch, const Attachment& att, const Team& team,
+                                    std::string bytes) const {
+    TransformContext ctx;
+    ctx.xorKey = deriveXorKey(serverSecret_, ch.id(), team.id());
+    if (const auto* dyn = dynamic_cast<const DynamicFlagChallenge*>(&ch)) {
+        ctx.teamFlag = dyn->expectedFlagFor(team.id(), serverSecret_);
+    }
+    return applyTransform(att.transform, std::move(bytes), ctx);
+}
+
 AttachmentDto CTFManager::addAttachment(const UserId& adminId, const ChallengeId& challengeId,
-                                        const std::string& name, const std::string& bytes) {
+                                        const std::string& name, const std::string& bytes,
+                                        const std::string& transform) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
     requireAdmin(adminId);
     Challenge& ch = challenges_.at(challengeId);
+
+    if (!isValidTransform(transform)) {
+        throw ValidationException("Unknown transform. Use ops from: flag, xor, hex, base64 (e.g. flag|xor|hex)");
+    }
+    if (transformNeedsFlag(transform) && dynamic_cast<const DynamicFlagChallenge*>(&ch) == nullptr) {
+        throw ValidationException("The 'flag' transform needs a challenge with per-team flags");
+    }
     files_.save(challengeId, name, bytes);  // validates the name and the size
 
     std::vector<Attachment> list = ch.attachments();
-    Attachment fresh{name, bytes.size(), crypto::sha256Hex(bytes), "none"};
+    Attachment fresh{name, bytes.size(), crypto::sha256Hex(bytes), transform.empty() ? "none" : transform};
     auto it = std::find_if(list.begin(), list.end(), [&](const Attachment& a) { return a.name == name; });
     if (it == list.end()) {
         list.push_back(fresh);
     } else {
-        fresh.transform = it->transform;  // replacing a file keeps its personalisation mode
+        if (transform.empty()) fresh.transform = it->transform;  // keep the mode when only the bytes change
         *it = fresh;
     }
     ch.setAttachments(std::move(list));
     persistLocked();
-    return AttachmentDto{fresh.name, fresh.size, fresh.sha256};
+    return AttachmentDto{fresh.name, fresh.size, fresh.sha256, isPersonalising(fresh.transform)};
 }
 
 void CTFManager::removeAttachment(const UserId& adminId, const ChallengeId& challengeId,
@@ -1078,6 +1109,7 @@ FileDownload CTFManager::downloadAttachment(const UserId& userId, const Challeng
     const Attachment* att = ch.findAttachment(name);
     if (!att) throw NotFoundException("No such file");
 
+    std::string bytes = files_.load(challengeId, name);
     if (user.role() != Role::Admin) {
         if (!ch.visible()) throw NotFoundException("No such file");  // hidden = does not exist
         requireRunning();
@@ -1087,8 +1119,14 @@ FileDownload CTFManager::downloadAttachment(const UserId& userId, const Challeng
         if (!missingPrerequisites(challengeView(), challengeId, solved).empty()) {
             throw ChallengeLockedException("Solve the prerequisites to unlock this file");
         }
+        if (isPersonalising(att->transform)) {
+            // Each team's copy is different, so a team is required.
+            if (!team) throw PermissionException("Join a team to download your team's version of this file");
+            bytes = personalise(ch, *att, *team, std::move(bytes));
+        }
     }
-    return FileDownload{att->name, contentTypeFor(att->name), files_.load(challengeId, name)};
+    // (admins receive the stored template, so they can inspect exactly what was uploaded)
+    return FileDownload{att->name, contentTypeFor(att->name), std::move(bytes)};
 }
 
 // ---------------------------------------------------------------------------
@@ -1327,7 +1365,7 @@ ChallengeDetailDto CTFManager::detailForAdmin(const UserId& adminId,
     static_cast<ChallengeListItemDto&>(d) = buildListItem(ch, nullptr);
     d.description = ch.description();
     for (const Attachment& a : ch.attachments())
-        d.attachments.push_back(AttachmentDto{a.name, a.size, a.sha256});
+        d.attachments.push_back(AttachmentDto{a.name, a.size, a.sha256, isPersonalising(a.transform)});
     for (const Hint& h : ch.hints()) {
         HintDto hd;
         hd.id = h.id();

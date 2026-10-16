@@ -1,0 +1,18 @@
+{
+  "key": "sql",
+  "title": "SQL Sleuth",
+  "category": "WEB",
+  "difficulty": "MEDIUM",
+  "points": 250,
+  "scoring": "DECAY_FIRSTBLOOD",
+  "requires": [
+    "inspect"
+  ],
+  "flag": "CTF{or_1_equals_1}",
+  "hints": [
+    {
+      "text": "The login query concatenates your input straight into the SQL string.",
+      "cost": 30
+    }
+  ]
+}

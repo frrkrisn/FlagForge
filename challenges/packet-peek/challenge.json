@@ -1,0 +1,18 @@
+{
+  "key": "packet",
+  "title": "Packet Peek",
+  "category": "FORENSICS",
+  "difficulty": "EASY",
+  "points": 150,
+  "scoring": "DECAY",
+  "flag": "CTF{follow_the_tcp_stream}",
+  "hints": [
+    {
+      "text": "HTTP login forms send what you type in the body of a POST request.",
+      "cost": 15
+    }
+  ],
+  "files": [
+    "capture.pcap"
+  ]
+}

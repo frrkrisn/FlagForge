@@ -94,6 +94,8 @@ export interface Attachment {
   size: number;
   /** SHA-256 of the file, so players can verify their download. */
   sha256: string;
+  /** True when every team receives a different version of this file. */
+  personalised?: boolean;
 }
 
 export interface Hint {

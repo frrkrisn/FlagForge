@@ -1,0 +1,18 @@
+{
+  "key": "radio",
+  "title": "Radio Silence",
+  "category": "MISC",
+  "difficulty": "MEDIUM",
+  "points": 180,
+  "scoring": "DECAY_FIRSTBLOOD",
+  "flag": "CTF{dit_dah_signal_saved}",
+  "hints": [
+    {
+      "text": "Short beeps are dots, long beeps are dashes. A longer gap separates letters, an even longer one separates words.",
+      "cost": 20
+    }
+  ],
+  "files": [
+    "signal.wav"
+  ]
+}

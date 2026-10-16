@@ -130,7 +130,8 @@ json toJson(const ChallengeDetailDto& c) {
     j["description"] = c.description;
     json atts = json::array();
     for (const auto& a : c.attachments)
-        atts.push_back(json{{"name", a.name}, {"size", a.size}, {"sha256", a.sha256}});
+        atts.push_back(json{{"name", a.name}, {"size", a.size}, {"sha256", a.sha256},
+                            {"personalised", a.personalised}});
     j["attachments"] = atts;
     json solvers = json::array();
     for (const auto& s : c.recentSolvers)
@@ -437,8 +438,9 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
                    guarded(res, [&] {
                        const UserId uid = requireUser(req);
                        requireAdmin(uid);
-                       const auto a = mgr.addAttachment(uid, req.matches[1], req.matches[2], req.body);
-                       return json{{"name", a.name}, {"size", a.size}, {"sha256", a.sha256}};
+                       const std::string transform = req.has_param("transform") ? req.get_param_value("transform") : "";
+                       const auto a = mgr.addAttachment(uid, req.matches[1], req.matches[2], req.body, transform);
+                       return json{{"name", a.name}, {"size", a.size}, {"sha256", a.sha256}, {"personalised", a.personalised}};
                    });
                });
     server.Delete(R"(/api/admin/challenges/([^/]+)/files/([^/]+))",

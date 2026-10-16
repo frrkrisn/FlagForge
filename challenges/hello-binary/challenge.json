@@ -1,0 +1,12 @@
+{
+  "key": "hello",
+  "title": "Hello Binary",
+  "category": "REVERSE",
+  "difficulty": "EASY",
+  "points": 120,
+  "scoring": "DECAY",
+  "flag": "CTF{printf_gives_it_away}",
+  "files": [
+    "hello.exe"
+  ]
+}

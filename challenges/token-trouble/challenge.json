@@ -1,0 +1,12 @@
+{
+  "key": "jwt",
+  "title": "Token Trouble",
+  "category": "WEB",
+  "difficulty": "MEDIUM",
+  "points": 280,
+  "scoring": "DECAY",
+  "requires": [
+    "cookie"
+  ],
+  "flag": "CTF{none_algorithm_is_not_an_option}"
+}

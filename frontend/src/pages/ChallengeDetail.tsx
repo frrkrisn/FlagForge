@@ -1,5 +1,5 @@
 import confetti from 'canvas-confetti';
-import { ArrowLeft, Check, Download, FileDown, Lock } from 'lucide-react';
+import { ArrowLeft, Check, Download, FileDown, Fingerprint, Lock } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import ReactMarkdown from 'react-markdown';
@@ -170,7 +170,14 @@ export default function ChallengeDetail() {
                     <FileDown size={20} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-sm text-fg">{a.name}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate font-mono text-sm text-fg">{a.name}</span>
+                      {a.personalised && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-panel px-2.5 py-0.5 text-[10px] uppercase tracking-wider text-accent shadow-nm-inset-sm">
+                          <Fingerprint size={11} /> unique to your team
+                        </span>
+                      )}
+                    </div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-3 text-xs text-fg-muted">
                       <span>{formatBytes(a.size)}</span>
                       {a.sha256 && (

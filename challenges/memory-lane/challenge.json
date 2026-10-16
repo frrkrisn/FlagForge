@@ -1,0 +1,21 @@
+{
+  "key": "memory",
+  "title": "Memory Lane",
+  "category": "FORENSICS",
+  "difficulty": "HARD",
+  "points": 400,
+  "scoring": "DECAY_FIRSTBLOOD",
+  "requires": [
+    "packet"
+  ],
+  "flag": "CTF{utf16_hides_in_plain_sight}",
+  "hints": [
+    {
+      "text": "Windows programs usually store text as UTF-16, two bytes per character. Plain strings will miss it.",
+      "cost": 45
+    }
+  ],
+  "files": [
+    "memory.dmp"
+  ]
+}

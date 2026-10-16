@@ -1,0 +1,2 @@
+# Netscape HTTP Cookie File
+admin.harbor.example	TRUE	/	TRUE	0	session	{{FLAG}}

@@ -132,8 +132,12 @@ public:
 
     // --- attachments ---------------------------------------------------------
     /// Store (or replace) a file on a challenge; records its size and SHA-256. Admin only.
+    /// \p transform is a pipeline such as "flag|xor|hex" (see core/FileTransform.hpp) that
+    /// personalises the file per team on download. Empty keeps the existing mode when
+    /// replacing a file, or "none" for a new one.
     AttachmentDto addAttachment(const UserId& adminId, const ChallengeId& challengeId,
-                                const std::string& name, const std::string& bytes);
+                                const std::string& name, const std::string& bytes,
+                                const std::string& transform = "");
     void removeAttachment(const UserId& adminId, const ChallengeId& challengeId,
                           const std::string& name);
     /// A file for a player or admin. Players need a visible, unlocked challenge and a
@@ -160,6 +164,10 @@ private:
                                       const ChallengeId& challengeId) const;
     nlohmann::json toJson() const;
     void fromJson(const nlohmann::json& doc);
+
+    /// The bytes a given team receives for a personalised attachment (assumes lock held).
+    std::string personalise(const Challenge& ch, const Attachment& att, const Team& team,
+                            std::string bytes) const;
 
     // Assemble borrowed views for the Scoreboard under the current lock.
     scoring::TeamView teamView() const;

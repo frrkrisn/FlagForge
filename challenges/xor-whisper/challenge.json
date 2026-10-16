@@ -1,0 +1,21 @@
+{
+  "key": "xor",
+  "title": "XOR Whisper",
+  "category": "CRYPTO",
+  "difficulty": "EASY",
+  "points": 120,
+  "scoring": "DYNAMIC",
+  "flagType": "DYNAMIC",
+  "hints": [
+    {
+      "text": "The key is a single byte, so there are only 255 possibilities.",
+      "cost": 10
+    }
+  ],
+  "files": [
+    {
+      "name": "intercepted.hex",
+      "transform": "flag|xor|hex"
+    }
+  ]
+}

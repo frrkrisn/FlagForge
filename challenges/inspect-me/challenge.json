@@ -1,0 +1,9 @@
+{
+  "key": "inspect",
+  "title": "Inspect Me",
+  "category": "WEB",
+  "difficulty": "EASY",
+  "points": 100,
+  "scoring": "DECAY",
+  "flag": "CTF{view_source_luke}"
+}

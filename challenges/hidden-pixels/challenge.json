@@ -1,0 +1,18 @@
+{
+  "key": "pixels",
+  "title": "Hidden Pixels",
+  "category": "FORENSICS",
+  "difficulty": "MEDIUM",
+  "points": 250,
+  "scoring": "DECAY_FIRSTBLOOD",
+  "flag": "CTF{exif_never_lies}",
+  "hints": [
+    {
+      "text": "Image files carry more than pixels. Look at the text metadata chunks.",
+      "cost": 25
+    }
+  ],
+  "files": [
+    "sunset.png"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "key": "token",
+  "title": "Team Token",
+  "category": "WEB",
+  "difficulty": "MEDIUM",
+  "points": 300,
+  "scoring": "DYNAMIC",
+  "requires": [
+    "robots"
+  ],
+  "flagType": "DYNAMIC",
+  "files": [
+    {
+      "name": "session.dat",
+      "transform": "flag|base64"
+    }
+  ]
+}

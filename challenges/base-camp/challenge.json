@@ -1,0 +1,15 @@
+{
+  "key": "basecamp",
+  "title": "Base Camp",
+  "category": "CRYPTO",
+  "difficulty": "MEDIUM",
+  "points": 200,
+  "scoring": "DECAY",
+  "requires": [
+    "caesar"
+  ],
+  "flag": "CTF{layers_upon_layers}",
+  "files": [
+    "layers.txt"
+  ]
+}

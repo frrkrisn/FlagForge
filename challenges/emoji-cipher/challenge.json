@@ -1,0 +1,12 @@
+{
+  "key": "emoji",
+  "title": "Emoji Cipher",
+  "category": "MISC",
+  "difficulty": "EASY",
+  "points": 80,
+  "scoring": "DECAY",
+  "flag": "CTF{emoji_are_just_unicode}",
+  "files": [
+    "message.txt"
+  ]
+}

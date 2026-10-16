@@ -1,0 +1,24 @@
+{
+  "key": "session",
+  "title": "Session Secrets",
+  "category": "WEB",
+  "difficulty": "HARD",
+  "points": 350,
+  "scoring": "DYNAMIC_FIRSTBLOOD",
+  "requires": [
+    "sql"
+  ],
+  "flagType": "DYNAMIC",
+  "hints": [
+    {
+      "text": "Two layers: undo the base64 first, then the single-byte XOR.",
+      "cost": 35
+    }
+  ],
+  "files": [
+    {
+      "name": "cookiejar.txt",
+      "transform": "flag|xor|base64"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "key": "vigenere",
+  "title": "Vigenère Vault",
+  "category": "CRYPTO",
+  "difficulty": "MEDIUM",
+  "points": 220,
+  "scoring": "DECAY",
+  "requires": [
+    "caesar"
+  ],
+  "flag": "CTF{keys_repeat_so_do_patterns}",
+  "hints": [
+    {
+      "text": "The key is a short English word, repeated across the whole message.",
+      "cost": 25
+    }
+  ],
+  "files": [
+    "vault.txt"
+  ]
+}

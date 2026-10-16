@@ -126,6 +126,14 @@ file(GLOB_RECURSE CTF_SERVER_SOURCES CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/server/*.cpp)
 
 add_executable(ctf_server ${CTF_SERVER_SOURCES})
+
+# The server sources are template-heavy glue (nlohmann::json + cpp-httplib lambdas) and need a lot of
+# RAM at -O2/-O3, which can exhaust a busy machine. They are not hot paths, so compile them with light
+# optimisation and make GCC collect garbage aggressively. (The game logic in ctf_core stays optimised.)
+if(NOT MSVC)
+    set_source_files_properties(${CTF_SERVER_SOURCES} PROPERTIES
+        COMPILE_OPTIONS "-O1;--param=ggc-min-expand=10;--param=ggc-min-heapsize=16384")
+endif()
 target_link_libraries(ctf_server
     PRIVATE ctf_core httplib::httplib nlohmann_json::nlohmann_json
             ctf_warnings ctf_sanitizers ctf_static_runtime)
