@@ -765,6 +765,18 @@ SubmitOutcome CTFManager::submitFlag(const UserId& userId, const ChallengeId& ch
         cooldown_.clear(team.id(), challengeId);
 
         submissions_.push_back(Submission(team.id(), userId, challengeId, now, SubmitResult::Correct));
+
+        // Behavioural anti-cheat: when could this team first have started this challenge?
+        // (the latest of the event start and the time its last prerequisite was solved)
+        TimePoint availableSince = startAt_.value_or(now);
+        for (const ChallengeId& prereq : ch.prerequisites()) {
+            for (const SolveRecord& s : team.solves()) {
+                if (s.challengeId == prereq && s.timestamp > availableSince) availableSince = s.timestamp;
+            }
+        }
+        antiCheat_->noteSolve(events::SolveObservation{team.id(), team.name(), challengeId, ch.title(),
+                                                       ch.difficulty(), availableSince, now});
+
         if (firstBlood) {
             team.awardBadge("FIRST_BLOOD");
             publishEvent(events::EventType::FirstBlood,
@@ -1027,6 +1039,29 @@ std::string CTFManager::revealTeamFlag(const UserId& adminId, const TeamId& team
     throw ValidationException("That challenge does not use per-team dynamic flags");
 }
 
+events::AntiCheatConfig CTFManager::antiCheatConfig(const UserId& adminId) const {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    requireAdmin(adminId);
+    return antiCheat_->config();
+}
+
+events::AntiCheatConfig CTFManager::setAntiCheatConfig(const UserId& adminId,
+                                                       const events::AntiCheatConfig& config) {
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    requireAdmin(adminId);
+    auto inRange = [](int v, int hi) { return v >= 0 && v <= hi; };
+    if (!inRange(config.fastSolveEasySeconds, 3600) || !inRange(config.fastSolveMediumSeconds, 3600) ||
+        !inRange(config.fastSolveHardSeconds, 3600)) {
+        throw ValidationException("Fast-solve thresholds must be between 0 and 3600 seconds (0 disables the rule)");
+    }
+    if (!inRange(config.correlationWindowSeconds, 600) || !inRange(config.correlationMinChallenges, 50)) {
+        throw ValidationException("Correlation window must be 0-600 seconds and the challenge count 0-50 (0 disables the rule)");
+    }
+    antiCheat_->setConfig(config);
+    persistLocked();
+    return config;
+}
+
 StatsDto CTFManager::stats() const {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     StatsDto s;
@@ -1242,6 +1277,12 @@ nlohmann::json CTFManager::toJson() const {
     for (const events::Alert& a : antiCheat_->alerts()) alerts.push_back(alertToJson(a));
     doc["alerts"] = std::move(alerts);
     doc["nextAlertId"] = antiCheat_->nextAlertId();
+    const events::AntiCheatConfig& ac = antiCheat_->config();
+    doc["antiCheatConfig"] = json{{"fastSolveEasySeconds", ac.fastSolveEasySeconds},
+                                  {"fastSolveMediumSeconds", ac.fastSolveMediumSeconds},
+                                  {"fastSolveHardSeconds", ac.fastSolveHardSeconds},
+                                  {"correlationWindowSeconds", ac.correlationWindowSeconds},
+                                  {"correlationMinChallenges", ac.correlationMinChallenges}};
 
     json feed = json::array();
     for (const auto& [id, event] : feed_->entries()) {
@@ -1365,6 +1406,16 @@ void CTFManager::fromJson(const nlohmann::json& doc) {
     std::vector<events::Alert> alerts;
     for (const json& ja : doc.value("alerts", json::array())) alerts.push_back(alertFromJson(ja));
     antiCheat_->restore(std::move(alerts), doc.value("nextAlertId", 1LL));
+    if (doc.contains("antiCheatConfig")) {
+        const json& jc = doc["antiCheatConfig"];
+        events::AntiCheatConfig cfg;  // missing keys keep their defaults
+        cfg.fastSolveEasySeconds = jc.value("fastSolveEasySeconds", cfg.fastSolveEasySeconds);
+        cfg.fastSolveMediumSeconds = jc.value("fastSolveMediumSeconds", cfg.fastSolveMediumSeconds);
+        cfg.fastSolveHardSeconds = jc.value("fastSolveHardSeconds", cfg.fastSolveHardSeconds);
+        cfg.correlationWindowSeconds = jc.value("correlationWindowSeconds", cfg.correlationWindowSeconds);
+        cfg.correlationMinChallenges = jc.value("correlationMinChallenges", cfg.correlationMinChallenges);
+        antiCheat_->setConfig(cfg);
+    }
 
     std::vector<events::ActivityFeed::Entry> feed;
     for (const json& jf : doc.value("feed", json::array())) {

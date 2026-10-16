@@ -1,19 +1,86 @@
 import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
-import { CheckCheck, Flame, ShieldAlert, ShieldCheck, Skull, type LucideIcon } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCheck, Flame, Gauge, ShieldAlert, ShieldCheck, Skull, Timer, Users, type LucideIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useAlerts, useDismissAlert } from '../../api/hooks';
+import { ApiError } from '../../api/client';
+import { useAlerts, useAntiCheatConfig, useDismissAlert, useSaveAntiCheatConfig, type AntiCheatConfig } from '../../api/hooks';
 import { Panel } from '../../components/Panel';
-import { Button, EmptyState, Skeleton } from '../../components/ui';
-import { Segmented } from './shared';
+import { Button, EmptyState, Input, Skeleton } from '../../components/ui';
+import { Field, Segmented } from './shared';
 import { SEVERITY_COLOR, alertSeverity } from './util';
 
 const KIND: Record<string, { label: string; icon: LucideIcon; blurb: string }> = {
   FLAG_SHARING: { label: 'Flag sharing', icon: Skull, blurb: 'A team submitted another team’s unique flag.' },
   BURST_SUBMISSIONS: { label: 'Submission burst', icon: Flame, blurb: 'Unusually many submissions in a minute.' },
   SAME_WRONG_FLAG_MULTI_TEAM: { label: 'Identical wrong flag', icon: ShieldAlert, blurb: 'Several teams sent the same wrong answer.' },
+  FAST_SOLVE: { label: 'Suspiciously fast solve', icon: Timer, blurb: 'Solved much sooner than the challenge became available allows.' },
+  CORRELATED_SOLVES: { label: 'Correlated solves', icon: Users, blurb: 'Two teams keep solving the same challenges within seconds of each other.' },
 };
+
+const RULE_FIELDS: { key: keyof AntiCheatConfig; label: string; hint: string }[] = [
+  { key: 'fastSolveEasySeconds', label: 'Fast solve: easy (s)', hint: 'Flag an EASY solve faster than this' },
+  { key: 'fastSolveMediumSeconds', label: 'Fast solve: medium (s)', hint: 'Same for MEDIUM' },
+  { key: 'fastSolveHardSeconds', label: 'Fast solve: hard (s)', hint: 'Same for HARD' },
+  { key: 'correlationWindowSeconds', label: 'Together window (s)', hint: 'Two solves this close count as "together"' },
+  { key: 'correlationMinChallenges', label: 'Together count', hint: 'Challenges solved together before alerting' },
+];
+
+/** Tune the behavioural detection rules. 0 switches a rule off. */
+function RulesPanel() {
+  const { data, isLoading } = useAntiCheatConfig(true);
+  const save = useSaveAntiCheatConfig();
+  const [draft, setDraft] = useState<AntiCheatConfig | null>(null);
+  useEffect(() => {
+    if (data && !draft) setDraft(data);
+  }, [data, draft]);
+
+  if (isLoading || !draft) return <Skeleton className="h-40" />;
+  const dirty = JSON.stringify(draft) !== JSON.stringify(data);
+
+  return (
+    <Panel title="~/admin/detection-rules" bodyClassName="space-y-6 p-7">
+      <div className="flex items-start gap-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-bg text-accent shadow-nm-inset-sm">
+          <Gauge size={20} />
+        </span>
+        <p className="text-sm text-fg-muted">
+          These rules watch behaviour, not just flags. Set a value to <span className="text-fg">0</span> to switch that
+          rule off, for example while you load demo data in bulk.
+        </p>
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        {RULE_FIELDS.map((f) => (
+          <Field key={f.key} label={f.label} hint={f.hint}>
+            <Input
+              type="number"
+              min={0}
+              value={draft[f.key]}
+              onChange={(e) => setDraft({ ...draft, [f.key]: Math.max(0, Number(e.target.value) || 0) })}
+            />
+          </Field>
+        ))}
+      </div>
+      <div className="flex gap-3">
+        <Button
+          loading={save.isPending}
+          disabled={!dirty}
+          onClick={() =>
+            save.mutate(draft, {
+              onSuccess: () => toast.success('Detection rules saved'),
+              onError: (e) => toast.error(e instanceof ApiError ? e.message : 'Could not save'),
+            })
+          }
+        >
+          Save rules
+        </Button>
+        <Button variant="ghost" disabled={!dirty} onClick={() => data && setDraft(data)}>
+          Reset
+        </Button>
+      </div>
+    </Panel>
+  );
+}
 
 export default function AlertsTab() {
   const { data, isLoading } = useAlerts(true);
@@ -25,6 +92,7 @@ export default function AlertsTab() {
   const open = all.filter((a) => a.status === 'OPEN').length;
 
   return (
+    <div className="space-y-8">
     <Panel
       title="~/admin/alerts"
       actions={<span className={open ? 'text-danger' : 'text-success'}>{open} open</span>}
@@ -100,5 +168,7 @@ export default function AlertsTab() {
         </ul>
       )}
     </Panel>
+      <RulesPanel />
+    </div>
   );
 }

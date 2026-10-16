@@ -125,6 +125,9 @@ public:
                                            const SubmissionFilter& filter) const;
     std::vector<events::Alert> alerts(const UserId& adminId) const;
     void dismissAlert(const UserId& adminId, const AlertId& alertId);
+    /// The behavioural anti-cheat thresholds (0 disables a rule). Admin only; persisted.
+    events::AntiCheatConfig antiCheatConfig(const UserId& adminId) const;
+    events::AntiCheatConfig setAntiCheatConfig(const UserId& adminId, const events::AntiCheatConfig& config);
     Announcement postAnnouncement(const UserId& adminId, const std::string& title,
                                   const std::string& body, Severity severity);
     std::string revealTeamFlag(const UserId& adminId, const TeamId& teamId,

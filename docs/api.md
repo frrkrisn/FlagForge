@@ -337,7 +337,9 @@ SSE is unavailable. Messages are routed into the TanStack Query cache.
 | `POST /api/admin/event/freeze` | `{ "freezeAt": "2026-09-30T08:00:00Z" }` | event status |
 | `GET /api/admin/scoreboard` | — | `{ "rows": [ScoreRow] }` (always live) |
 | `GET /api/admin/submissions?team=&challenge=&result=` | — | `{ "submissions": [Submission] }` |
-| `GET /api/admin/alerts` | — | `{ "alerts": [Alert] }` |
+| `GET /api/admin/alerts` | — | `{ "alerts": [Alert] }`. `kind` is `FLAG_SHARING`, `BURST_SUBMISSIONS`, `SAME_WRONG_FLAG_MULTI_TEAM`, `FAST_SOLVE` (solved far sooner than the challenge became available allows) or `CORRELATED_SOLVES` (two teams repeatedly solve the same challenges within seconds) |
+| `GET /api/admin/anticheat` | — | thresholds: `{ fastSolveEasySeconds, fastSolveMediumSeconds, fastSolveHardSeconds, correlationWindowSeconds, correlationMinChallenges }` |
+| `PUT /api/admin/anticheat` | any subset of the fields above | the updated thresholds. `0` disables a rule. Values are validated (`400 VALIDATION`) and persisted |
 | `POST /api/admin/alerts/:id/dismiss` | — | updated `Alert` |
 | `POST /api/admin/announcements` | `{ title, body, severity }` | created `Announcement` |
 | `GET /api/admin/teams/:teamId/flag/:challengeId` | — | `{ "flag": "CTF{...}" }` (demo only) |

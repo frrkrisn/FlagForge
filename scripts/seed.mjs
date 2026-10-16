@@ -32,6 +32,19 @@ async function main() {
   const admin = await ensureUser('admin', 'admin', 'admin@flagforge.ctf', 'adminpassword');
   console.log('  [+] admin ready');
 
+  // Bulk seeding solves everything within seconds, which the behavioural anti-cheat rules
+  // (fast solve, correlated solves) would rightly flag hundreds of times. Switch them off while
+  // seeding and put the admin's settings back afterwards.
+  let savedRules = null;
+  try {
+    savedRules = await req(admin, 'GET', '/admin/anticheat');
+    await req(admin, 'PUT', '/admin/anticheat', {
+      fastSolveEasySeconds: 0, fastSolveMediumSeconds: 0, fastSolveHardSeconds: 0, correlationMinChallenges: 0,
+    });
+  } catch {
+    /* an older server without this endpoint: nothing to switch off */
+  }
+
   // 2) Challenges. Packs (which carry files) are always synced; text-only challenges are
   //    created if missing and retuned if their decay window is out of date.
   const existing = (await req(admin, 'GET', '/challenges')).challenges;
@@ -163,6 +176,10 @@ async function main() {
     }
   }
 
+  if (savedRules) {
+    await req(admin, 'PUT', '/admin/anticheat', savedRules).catch(() => {});
+    console.log('  [+] anti-cheat rules restored');
+  }
   console.log('Done. Log in as admin / adminpassword, or any captain (e.g. nullpoin1 / password123).');
 }
 

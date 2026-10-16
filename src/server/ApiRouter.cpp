@@ -598,7 +598,36 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
             return json{{"submissions", arr}};
         });
     });
-    server.Get("/api/admin/alerts", [this, &mgr](const httplib::Request& req, httplib::Response& res) {
+    // Behavioural anti-cheat thresholds (0 disables a rule).
+    auto cfgJson = [](const events::AntiCheatConfig& c) {
+        return json{{"fastSolveEasySeconds", c.fastSolveEasySeconds},
+                    {"fastSolveMediumSeconds", c.fastSolveMediumSeconds},
+                    {"fastSolveHardSeconds", c.fastSolveHardSeconds},
+                    {"correlationWindowSeconds", c.correlationWindowSeconds},
+                    {"correlationMinChallenges", c.correlationMinChallenges}};
+    };
+    server.Get("/api/admin/anticheat", [this, &mgr, cfgJson](const httplib::Request& req, httplib::Response& res) {
+        guarded(res, [&] {
+            const UserId uid = requireUser(req);
+            requireAdmin(uid);
+            return cfgJson(mgr.antiCheatConfig(uid));
+        });
+    });
+    server.Put("/api/admin/anticheat", [this, &mgr, cfgJson](const httplib::Request& req, httplib::Response& res) {
+        guarded(res, [&] {
+            const UserId uid = requireUser(req);
+            requireAdmin(uid);
+            const json b = parseBody(req);
+            events::AntiCheatConfig c = mgr.antiCheatConfig(uid);  // omitted keys keep their value
+            c.fastSolveEasySeconds = b.value("fastSolveEasySeconds", c.fastSolveEasySeconds);
+            c.fastSolveMediumSeconds = b.value("fastSolveMediumSeconds", c.fastSolveMediumSeconds);
+            c.fastSolveHardSeconds = b.value("fastSolveHardSeconds", c.fastSolveHardSeconds);
+            c.correlationWindowSeconds = b.value("correlationWindowSeconds", c.correlationWindowSeconds);
+            c.correlationMinChallenges = b.value("correlationMinChallenges", c.correlationMinChallenges);
+            return cfgJson(mgr.setAntiCheatConfig(uid, c));
+        });
+    });
+    server.Get("/api/admin/alerts",[this, &mgr](const httplib::Request& req, httplib::Response& res) {
         guarded(res, [&] {
             const UserId uid = requireUser(req);
             json arr = json::array();

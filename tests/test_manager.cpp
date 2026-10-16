@@ -16,6 +16,14 @@ using namespace std::chrono;
 
 namespace {
 
+/// Behavioural anti-cheat rules off (a fake clock makes every solve instant, which they would flag).
+events::AntiCheatConfig quietAntiCheat() {
+    events::AntiCheatConfig c;
+    c.fastSolveEasySeconds = c.fastSolveMediumSeconds = c.fastSolveHardSeconds = 0;
+    c.correlationMinChallenges = 0;
+    return c;
+}
+
 struct Harness {
     std::string dir;
     ctftest::FakeClock* clock;
@@ -125,6 +133,7 @@ TEST_CASE("Dynamic per-team flags and flag-sharing detection", "[app][manager][a
     auto bob = mgr.registerUser("bob", "bob@x.com", "password123");
     auto teamA = mgr.createTeam(alice.me.id, "Alpha");
     auto teamB = mgr.createTeam(bob.me.id, "Bravo");
+    mgr.setAntiCheatConfig(admin.me.id, quietAntiCheat());  // this test is about flag sharing only
 
     ChallengeSpec dyn;
     dyn.id = "c_7";
@@ -191,6 +200,7 @@ TEST_CASE("Alerts and the activity feed survive a restart", "[app][manager][pers
         auto bob = mgr.registerUser("bob", "bob@x.com", "password123");
         auto teamA = mgr.createTeam(alice.me.id, "Alpha");
         mgr.createTeam(bob.me.id, "Bravo");
+        mgr.setAntiCheatConfig(admin.me.id, quietAntiCheat());  // only the flag-sharing alert is expected
 
         ChallengeSpec dyn;
         dyn.id = "c_1";

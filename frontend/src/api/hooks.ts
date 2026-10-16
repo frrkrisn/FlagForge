@@ -244,6 +244,31 @@ export function useAlerts(enabled: boolean) {
   });
 }
 
+/** Behavioural anti-cheat thresholds. A value of 0 disables that rule. */
+export interface AntiCheatConfig {
+  fastSolveEasySeconds: number;
+  fastSolveMediumSeconds: number;
+  fastSolveHardSeconds: number;
+  correlationWindowSeconds: number;
+  correlationMinChallenges: number;
+}
+
+export function useAntiCheatConfig(enabled: boolean) {
+  return useQuery<AntiCheatConfig>({
+    queryKey: ['admin', 'anticheat'],
+    queryFn: () => api.get<AntiCheatConfig>('/admin/anticheat'),
+    enabled,
+  });
+}
+
+export function useSaveAntiCheatConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (cfg: AntiCheatConfig) => api.put<AntiCheatConfig>('/admin/anticheat', cfg),
+    onSuccess: (data) => qc.setQueryData(['admin', 'anticheat'], data),
+  });
+}
+
 export function useDismissAlert() {
   const qc = useQueryClient();
   return useMutation({

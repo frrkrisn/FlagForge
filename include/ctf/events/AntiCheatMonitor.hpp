@@ -19,8 +19,42 @@
 
 namespace ctf::events {
 
-enum class AlertKind { FlagSharing, BurstSubmissions, SameWrongFlagMultiTeam };
+enum class AlertKind {
+    FlagSharing,
+    BurstSubmissions,
+    SameWrongFlagMultiTeam,
+    FastSolve,         ///< solved far sooner than the challenge became available allows
+    CorrelatedSolves,  ///< two teams repeatedly solve the same challenges within seconds
+};
 enum class AlertStatus { Open, Dismissed };
+
+/// Admin-tunable thresholds for the behavioural rules. A value of 0 disables that rule.
+struct AntiCheatConfig {
+    int fastSolveEasySeconds = 3;       ///< EASY solved this soon after becoming available
+    int fastSolveMediumSeconds = 12;
+    int fastSolveHardSeconds = 25;
+    int correlationWindowSeconds = 5;   ///< two solves of one challenge this close count as "together"
+    int correlationMinChallenges = 3;   ///< ...and this many such challenges raise an alert
+
+    bool operator==(const AntiCheatConfig& o) const noexcept {
+        return fastSolveEasySeconds == o.fastSolveEasySeconds &&
+               fastSolveMediumSeconds == o.fastSolveMediumSeconds &&
+               fastSolveHardSeconds == o.fastSolveHardSeconds &&
+               correlationWindowSeconds == o.correlationWindowSeconds &&
+               correlationMinChallenges == o.correlationMinChallenges;
+    }
+};
+
+/// What the monitor needs to know about one correct solve. Built by CTFManager.
+struct SolveObservation {
+    TeamId teamId;
+    std::string teamName;
+    ChallengeId challengeId;
+    std::string challengeTitle;
+    Difficulty difficulty = Difficulty::Easy;
+    TimePoint availableSince{};  ///< when the team could first have started (latest prerequisite solve / event start)
+    TimePoint at{};              ///< when it was solved
+};
 
 const char* toString(AlertKind kind) noexcept;
 const char* toString(AlertStatus status) noexcept;
@@ -58,6 +92,12 @@ public:
     std::vector<Alert> openAlerts() const;
     void dismiss(const AlertId& alertId);
 
+    /// Behavioural checks on a correct solve (fast solve, correlated solves). Throws nothing.
+    void noteSolve(const SolveObservation& solve);
+
+    const AntiCheatConfig& config() const noexcept { return config_; }
+    void setConfig(const AntiCheatConfig& config) noexcept { config_ = config; }
+
     /// Id the next raised alert will get (persisted so ids stay unique across restarts).
     long long nextAlertId() const noexcept { return nextAlertId_; }
 
@@ -76,6 +116,19 @@ private:
     // challengeId + ":" + wrongFlagHash  ->  distinct teams that submitted it
     std::unordered_map<std::string, std::unordered_set<TeamId>> wrongFlagTeams_;
     std::unordered_set<std::string> sameWrongFlagAlerted_;  // keys already alerted (dedup)
+
+    AntiCheatConfig config_;
+    struct Solved {
+        TeamId teamId;
+        std::string teamName;
+        TimePoint at;
+    };
+    // challengeId -> solves seen so far (correlation detection)
+    std::unordered_map<ChallengeId, std::vector<Solved>> solvesByChallenge_;
+    // "teamA|teamB" (ordered) -> challenges both solved within the window
+    std::unordered_map<std::string, std::unordered_set<ChallengeId>> togetherChallenges_;
+    std::unordered_set<std::string> correlationAlerted_;  // pairs already alerted (dedup)
+    std::unordered_set<std::string> fastSolveAlerted_;    // "team|challenge" already alerted
 };
 
 }  // namespace ctf::events
