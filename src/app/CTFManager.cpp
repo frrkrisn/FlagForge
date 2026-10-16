@@ -1027,6 +1027,22 @@ std::string CTFManager::revealTeamFlag(const UserId& adminId, const TeamId& team
     throw ValidationException("That challenge does not use per-team dynamic flags");
 }
 
+StatsDto CTFManager::stats() const {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    StatsDto s;
+    s.users = users_.size();
+    s.teams = teams_.size();
+    s.challenges = challenges_.size();
+    for (const Team* t : teams_.all()) s.solves += t->solves().size();
+    s.openAlerts = antiCheat_->openAlerts().size();
+    s.eventState = toString(state_);
+    for (const char* name : {"CORRECT", "WRONG", "ALREADY_SOLVED", "FLAG_SHARING"}) {
+        s.submissionsByResult[name] = 0;  // always present, even at zero
+    }
+    for (const Submission& sub : submissions_) ++s.submissionsByResult[toString(sub.result())];
+    return s;
+}
+
 // ---------------------------------------------------------------------------
 // Attachments
 // ---------------------------------------------------------------------------

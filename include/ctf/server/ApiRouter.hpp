@@ -9,6 +9,7 @@
 
 #include <string>
 
+#include "ctf/app/Metrics.hpp"
 #include "ctf/core/Types.hpp"
 
 // Forward declarations keep httplib out of this header.
@@ -40,6 +41,7 @@ private:
     void requireAdmin(const UserId& userId) const;
 
     app::CTFManager& manager_;
+    app::Metrics metrics_;  ///< request counters / latency, rendered at GET /metrics
 };
 
 }  // namespace ctf::server

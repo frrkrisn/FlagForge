@@ -359,6 +359,18 @@ SSE is unavailable. Messages are routed into the TanStack Query cache.
 
 ---
 
+## 5.6 Operations
+
+#### `GET /metrics` — `none`
+Prometheus text exposition (`text/plain; version=0.0.4`). Aggregate counters only, with no personal
+data: `flagforge_http_requests_total{method,status}`, `flagforge_http_request_duration_seconds`
+(histogram), `flagforge_sse_clients`, `flagforge_uptime_seconds`, and game gauges
+(`flagforge_users`, `_teams`, `_challenges`, `_solves`, `_open_alerts`,
+`flagforge_event_state{state}`, `flagforge_submissions_total{result}`). Point Prometheus or Grafana
+Agent at it, or just `curl localhost:8080/metrics`.
+
+---
+
 ## 6. Invariants the frontend relies on
 1. No flag or unlocked-only hint text ever appears in a **list** response or any player response
    for a challenge the team has not unlocked/solved.

@@ -7,6 +7,7 @@
 ///        only has to map DTO → JSON (docs/api.md §4). No flags/hashes ever appear here.
 
 #include <cstddef>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -166,6 +167,17 @@ struct SubmissionDto {
     std::string playerName;
     std::string challengeTitle;
     SubmitResult result = SubmitResult::Wrong;
+};
+
+/// A snapshot of aggregate game state for monitoring (no personal data).
+struct StatsDto {
+    std::size_t users = 0;
+    std::size_t teams = 0;
+    std::size_t challenges = 0;
+    std::size_t solves = 0;
+    std::size_t openAlerts = 0;
+    std::string eventState;                                ///< "RUNNING", "ENDED", ...
+    std::map<std::string, std::size_t> submissionsByResult;  ///< "CORRECT" -> n
 };
 
 /// Authentication result: the user plus the freshly minted session token.

@@ -236,6 +236,14 @@ ChallengeSpec parseSpec(const json& b) {
 }  // namespace
 
 // ---------------------------------------------------------------------------
+namespace {
+/// Start time of the request being handled on this worker thread (see the pre-routing handler).
+std::chrono::steady_clock::time_point& requestStart() {
+    static thread_local std::chrono::steady_clock::time_point t;
+    return t;
+}
+}  // namespace
+
 ApiRouter::ApiRouter(app::CTFManager& manager) : manager_(manager) {}
 
 UserId ApiRouter::requireUser(const httplib::Request& req) const {
@@ -293,6 +301,22 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
 
     // Attachments are uploaded as a raw request body (up to 25 MB + headroom).
     server.set_payload_max_length(30u * 1024u * 1024u);
+
+    // Time every request: stamp the start (per worker thread) and record on completion.
+    server.set_pre_routing_handler([](const httplib::Request&, httplib::Response&) {
+        requestStart() = std::chrono::steady_clock::now();
+        return httplib::Server::HandlerResponse::Unhandled;
+    });
+    server.set_logger([this](const httplib::Request& req, const httplib::Response& res) {
+        const double seconds =
+            std::chrono::duration<double>(std::chrono::steady_clock::now() - requestStart()).count();
+        metrics_.observeRequest(req.method, res.status, seconds);
+    });
+
+    // Prometheus metrics: aggregate counters only (no personal data), so it is safe to scrape openly.
+    server.Get("/metrics", [this, &mgr](const httplib::Request&, httplib::Response& res) {
+        res.set_content(metrics_.render(mgr.stats(), ctf::version()), "text/plain; version=0.0.4; charset=utf-8");
+    });
 
     server.Get("/api/health", [](const httplib::Request&, httplib::Response& res) {
         writeOk(res, json{{"status", "up"}, {"version", ctf::version()}});
@@ -611,7 +635,8 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
                });
 
     // --- SSE stream (polling-based fan-out; heartbeat every 15s) ---
-    server.Get("/api/events/stream", [&mgr](const httplib::Request&, httplib::Response& res) {
+    server.Get("/api/events/stream", [this, &mgr](const httplib::Request&, httplib::Response& res) {
+        metrics_.sseConnected();  // released when the connection closes (see the releaser below)
         res.set_chunked_content_provider(
             "text/event-stream", [&mgr](std::size_t, httplib::DataSink& sink) -> bool {
                 using namespace std::chrono;
@@ -642,7 +667,8 @@ void ApiRouter::registerRoutes(httplib::Server& server) {
                     }
                     std::this_thread::sleep_for(seconds(2));
                 }
-            });
+            },
+            [this](bool /*success*/) { metrics_.sseDisconnected(); });
     });
 }
 

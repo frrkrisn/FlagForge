@@ -130,6 +130,9 @@ public:
     std::string revealTeamFlag(const UserId& adminId, const TeamId& teamId,
                                const ChallengeId& challengeId) const;
 
+    /// Aggregate counters for monitoring. Contains no personal data.
+    StatsDto stats() const;
+
     // --- attachments ---------------------------------------------------------
     /// Store (or replace) a file on a challenge; records its size and SHA-256. Admin only.
     /// \p transform is a pipeline such as "flag|xor|hex" (see core/FileTransform.hpp) that
