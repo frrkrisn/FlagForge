@@ -137,6 +137,9 @@ export default function ScoreboardPage() {
           top --live
         </Prompt>
         <div className="flex items-center gap-3">
+          <Link to="/replay" className="rounded-full bg-panel px-4 py-1.5 text-xs text-fg-muted shadow-nm-raised-sm hover:text-accent">
+            replay
+          </Link>
           <Link to="/projector" className="rounded-full bg-panel px-4 py-1.5 text-xs text-fg-muted shadow-nm-raised-sm hover:text-accent">
             projector mode
           </Link>
