@@ -26,7 +26,7 @@ export function replaySpan(teams: TimelineTeam[]): { start: number; end: number 
   return start === Infinity ? null : { start, end };
 }
 
-/** Every team's score at \`at\` (ms), best first. A team with no point yet is on 0. */
+/** Every team score at the moment `at` (ms), best first. A team with no point yet is on 0. */
 export function standingsAt(teams: TimelineTeam[], at: number): ReplayRow[] {
   return teams
     .map((t) => {
@@ -39,7 +39,7 @@ export function standingsAt(teams: TimelineTeam[], at: number): ReplayRow[] {
     .sort((a, b) => b.score - a.score || a.teamName.localeCompare(b.teamName));
 }
 
-/** The most recent score gains at or before \`at\`, newest first. */
+/** The most recent score gains at or before `at`, newest first. */
 export function movesUpTo(teams: TimelineTeam[], at: number, limit = 8): ReplayMove[] {
   const moves: ReplayMove[] = [];
   for (const t of teams) {

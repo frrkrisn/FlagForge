@@ -3,6 +3,7 @@
 // ORDER MATTERS: CHALLENGES is topologically sorted (every prerequisite appears before
 // the challenge that needs it), and SOLVE_ORDER reuses that same order.
 
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { loadPacks, topoSort } from './lib/packs.mjs';
 
@@ -38,6 +39,10 @@ const TEXT_CHALLENGES = [
 ];
 
 export const PACKS = loadPacks(fileURLToPath(new URL('../challenges/', import.meta.url)));
+
+// The PWN challenges are backed by simulated nc services (challenge-host/); their text lives in a JSON file.
+const PWN_TEXT = JSON.parse(readFileSync(fileURLToPath(new URL('./pwn-text.json', import.meta.url)), 'utf8'));
+for (const c of TEXT_CHALLENGES) Object.assign(c, PWN_TEXT[c.key] ?? {});
 
 const merged = TEXT_CHALLENGES.map((c) => PACKS.find((p) => p.key === c.key) ?? c);
 for (const p of PACKS) if (!merged.includes(p)) merged.push(p);

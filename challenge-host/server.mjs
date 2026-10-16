@@ -15,12 +15,15 @@
 //   /robots    discover a path through /robots.txt
 //   /sql       real SQL injection against SQLite
 //   /jwt       JWT verifier that accepts alg:none
+//   nc :9101 :9102 :9103   simulated pwn services (see services.mjs); also /nc/<name> over HTTP
 //
 // Node 22+ (uses the built-in node:sqlite).
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createServer } from 'node:http';
 import { DatabaseSync } from 'node:sqlite';
+import { startNcServers } from './nc-server.mjs';
+import { SERVICES, run } from './services.mjs';
 
 const HOST = process.env.CHAL_HOST || '127.0.0.1';
 const PORT = Number(process.env.CHAL_PORT || 9001);
@@ -86,11 +89,31 @@ async function handle(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const path = url.pathname.replace(/\/+$/, '') || '/';
 
+  // --- simulated pwn services over HTTP (used by the in-browser terminal; same logic as the nc ports)
+  if (path.startsWith('/nc/')) {
+    const name = path.slice(4);
+    const svc = SERVICES[name];
+    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type' };
+    if (req.method === 'OPTIONS') { res.writeHead(204, cors); return res.end(); }
+    if (!svc) { res.writeHead(404, cors); return res.end(JSON.stringify({ error: 'no such service' })); }
+    if (req.method === 'GET') {
+      res.writeHead(200, { ...cors, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ name, title: svc.title, port: svc.port, banner: svc.banner }));
+    }
+    let body = '';
+    for await (const chunk of req) { body += chunk; if (body.length > 8192) break; }
+    let line = '';
+    try { line = String(JSON.parse(body).line ?? '').slice(0, 4096); } catch { /* treat as empty */ }
+    res.writeHead(200, { ...cors, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ output: run(name, line) }));
+  }
+
   if (path === '/') {
     return send(res, 200, page('FlagForge challenge host', `<h1>flagforge challenge host</h1>
 <p>Intentionally vulnerable practice targets for the FlagForge web challenges.</p>
 <ul><li><a href="/inspect">/inspect</a></li><li><a href="/cookie">/cookie</a></li><li><a href="/robots">/robots</a></li>
 <li><a href="/sql">/sql</a></li><li><a href="/jwt">/jwt</a></li></ul>
+<p>Pwn services: <code>nc localhost 9101</code> (overflow), <code>9102</code> (format), <code>9103</code> (ret2win).</p>
 <p>Read each challenge's description on the platform for what to do.</p>`));
   }
 
@@ -195,4 +218,5 @@ createServer((req, res) => {
   });
 }).listen(PORT, HOST, () => {
   console.log(`FlagForge challenge host on http://${HOST}:${PORT}  (intentionally vulnerable; keep it off untrusted networks)`);
+  startNcServers(HOST);
 });

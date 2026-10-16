@@ -1,5 +1,5 @@
 import { MotionConfig } from 'framer-motion';
-import { LogOut, Palette, Shield, Trophy, Flag, Users, ScrollText } from 'lucide-react';
+import { LogOut, Palette, Shield, SquareTerminal, Trophy, Flag, Users, ScrollText } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -16,6 +16,7 @@ const NAV = [
   { to: '/challenges', label: 'Challenges', icon: Flag },
   { to: '/scoreboard', label: 'Scoreboard', icon: Trophy },
   { to: '/team', label: 'Team', icon: Users },
+  { to: '/terminal', label: 'Terminal', icon: SquareTerminal },
   { to: '/rules', label: 'Rules', icon: ScrollText },
 ];
 

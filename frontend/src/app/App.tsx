@@ -14,6 +14,7 @@ const TeamPage = lazy(() => import('../pages/TeamPage'));
 const Rules = lazy(() => import('../pages/Rules'));
 const Admin = lazy(() => import('../pages/Admin'));
 const Profile = lazy(() => import('../pages/Profile'));
+const TerminalPage = lazy(() => import('../pages/TerminalPage'));
 const Replay = lazy(() => import('../pages/Replay'));
 const Projector = lazy(() => import('../pages/Projector'));
 const NotFound = lazy(() => import('../pages/NotFound'));
@@ -40,6 +41,7 @@ export default function App() {
               <Route path="/challenges" element={<Challenges />} />
               <Route path="/challenges/:id" element={<ChallengeDetail />} />
               <Route path="/scoreboard" element={<ScoreboardPage />} />
+              <Route path="/terminal" element={<TerminalPage />} />
               <Route path="/replay" element={<Replay />} />
               <Route path="/team" element={<TeamPage />} />
               <Route path="/teams/:id" element={<Profile kind="team" />} />

