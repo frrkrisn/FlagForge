@@ -112,6 +112,8 @@ It serves the web challenges on `:9001` and three simulated `nc` services: `nc l
 (Overflow 101), `9102` (Format Fiasco), `9103` (Return Home). They model the vulnerable C programs and
 never execute player input. The in-browser Terminal talks to them too. Tests: `node --test challenge-host/services.test.mjs`.
 
+![FlagForge novelties and run guide](docs/flagforge-novelties.png)
+
 ## Feature tour
 
 | Page | What it does |

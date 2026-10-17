@@ -1,0 +1,25 @@
+{
+  "key": "boss",
+  "title": "Final Boss",
+  "category": "MISC",
+  "difficulty": "HARD",
+  "points": 500,
+  "scoring": "DYNAMIC_FIRSTBLOOD",
+  "requires": [
+    "token",
+    "overflow"
+  ],
+  "flagType": "DYNAMIC",
+  "hints": [
+    {
+      "text": "Peel the layers in order: the outer one is a transport encoding, the next is a text encoding, the last is a one-byte XOR.",
+      "cost": 60
+    }
+  ],
+  "files": [
+    {
+      "name": "clearance.dat",
+      "transform": "flag|xor|hex|base64"
+    }
+  ]
+}

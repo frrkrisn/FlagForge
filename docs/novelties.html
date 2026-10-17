@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FlagForge novelties and run guide</title>
+<style>
+  :root { --bg:#0b1210; --panel:#101a17; --fg:#cfeadf; --mut:#7fa08f; --acc:#4ee6a0; --warn:#ffcf5c; }
+  * { box-sizing: border-box; }
+  body { margin:0; width:1500px; background:var(--bg); color:var(--fg);
+         font:15px/1.5 "JetBrains Mono", ui-monospace, Consolas, monospace; padding:44px 48px 40px; }
+  h1 { margin:0; font-size:40px; color:var(--acc); letter-spacing:.5px; }
+  h1 span { color:var(--mut); }
+  .sub { color:var(--mut); margin:6px 0 28px; font-size:16px; }
+  h2 { font-size:20px; color:var(--acc); margin:26px 0 14px; }
+  h2::before { content:"$ "; color:var(--warn); }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .card { background:var(--panel); border-radius:18px; padding:16px 18px 15px;
+          box-shadow:6px 6px 14px #070c0a, -4px -4px 10px #16231f; }
+  .card .n { display:inline-block; min-width:30px; text-align:center; background:var(--bg); color:var(--acc);
+             border-radius:10px; padding:1px 8px; margin-right:8px; font-weight:700; box-shadow:inset 2px 2px 4px #070c0a; }
+  .card b { color:var(--fg); font-size:16px; }
+  .card p { margin:7px 0 0; color:var(--mut); font-size:13.5px; }
+  .card .where { color:var(--warn); font-size:12.5px; margin-top:6px; }
+  .run { background:var(--panel); border-radius:18px; padding:20px 24px;
+         box-shadow:6px 6px 14px #070c0a, -4px -4px 10px #16231f; }
+  .win { margin:0 0 14px; }
+  .win .t { color:var(--acc); font-weight:700; margin-bottom:4px; }
+  .win .t i { color:var(--mut); font-weight:400; font-style:normal; }
+  pre { margin:0; background:var(--bg); border-radius:12px; padding:11px 15px; color:#9ff3c8;
+        box-shadow:inset 3px 3px 7px #070c0a, inset -2px -2px 5px #16231f; font:inherit; font-size:14px; white-space:pre-wrap; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .note { color:var(--mut); font-size:13.5px; margin-top:10px; }
+  .note b, .logins b { color:var(--warn); }
+  .logins { margin-top:6px; }
+  .foot { margin-top:22px; color:var(--mut); font-size:12.5px; text-align:center; }
+  code { color:var(--acc); }
+</style>
+</head>
+<body>
+  <h1>flagforge<span>://novelties</span></h1>
+  <div class="sub">C++17 backend + React/TypeScript frontend. A CTF platform with 13 features that a plain scoreboard does not have.</div>
+
+  <h2>13 novelties built into the project</h2>
+  <div class="grid">
+    <div class="card"><b><span class="n">1</span>Real challenges, real files</b>
+      <p>27 challenges; pcap, ELF/PE binaries, memory dump, WAV, PNG. Each file shows its SHA-256 and some are unique per team.</p>
+      <div class="where">Challenge page → Files</div></div>
+    <div class="card"><b><span class="n">2</span>In-browser terminal</b>
+      <p>Play the whole CTF from a shell: ls, cat, get, submit, hint, score, nc. Uses the real API.</p>
+      <div class="where">Top nav → Terminal</div></div>
+    <div class="card"><b><span class="n">3</span>Simulated nc services</b>
+      <p>Overflow, format-string and ret2win pwn challenges over real TCP. Models the C program; never runs player input.</p>
+      <div class="where">nc localhost 9101 / 9102 / 9103</div></div>
+
+    <div class="card"><b><span class="n">4</span>Event replay</b>
+      <p>Scrub or play back the whole competition at 1x to 8x, with live standings and score moves.</p>
+      <div class="where">Scoreboard → replay</div></div>
+    <div class="card"><b><span class="n">5</span>Mission-control mode</b>
+      <p>Full-screen projector view: big top-10, live feed, countdown, first-blood banner. Press F for fullscreen.</p>
+      <div class="where">/projector</div></div>
+    <div class="card"><b><span class="n">6</span>Skill-tree graph</b>
+      <p>Challenges drawn as a prerequisite graph; solved paths glow, locked nodes are dimmed.</p>
+      <div class="where">Challenges → tree</div></div>
+
+    <div class="card"><b><span class="n">7</span>Smarter anti-cheat</b>
+      <p>Per-team files catch flag sharing. Fast-solve and correlated-solve rules, tunable by admins (0 = off).</p>
+      <div class="where">Admin → Alerts → Rules</div></div>
+    <div class="card"><b><span class="n">8</span>Writeups after solving</b>
+      <p>Official writeup stays locked until your team solves the challenge (or the event ends).</p>
+      <div class="where">Challenge page → writeup</div></div>
+    <div class="card"><b><span class="n">9</span>Challenge pack format</b>
+      <p>One folder per challenge: challenge.json, description.md, writeup.md, files/. Import with one script.</p>
+      <div class="where">challenges/ , docs/challenge-packs.md</div></div>
+
+    <div class="card"><b><span class="n">10</span>Skill radar and badges</b>
+      <p>Per-category radar and derived badges: first blood, master of a category, all-rounder, hard hitter, veteran.</p>
+      <div class="where">Player and team profiles</div></div>
+    <div class="card"><b><span class="n">11</span>Team war-room chat</b>
+      <p>Private chat per team. Only members can read or post; history survives a restart.</p>
+      <div class="where">Team → war-room</div></div>
+    <div class="card"><b><span class="n">12</span>Persistent alerts and feed</b>
+      <p>Anti-cheat alerts and the activity feed are saved, so a server restart loses nothing.</p>
+      <div class="where">Admin → Alerts</div></div>
+
+    <div class="card"><b><span class="n">13</span>Metrics endpoint</b>
+      <p>Prometheus text metrics: request timings, solves, alerts, live streams. Ready for Grafana.</p>
+      <div class="where">GET /metrics</div></div>
+    <div class="card" style="grid-column: span 2"><b>Also in the box</b>
+      <p>7 colour themes with a neumorphic terminal look; admin console (challenges, attachments, writeups, teams, event control); first blood and dynamic decay scoring; costed hints; scoreboard freeze; per-team dynamic flags; 30 demo teams.</p>
+      <div class="where">Backend: C++17, CMake, Ninja. Frontend: React 18, Vite, Tailwind, TanStack Query, recharts, framer-motion</div></div>
+  </div>
+
+  <h2>Run the whole project (Windows PowerShell, three windows)</h2>
+  <div class="run">
+    <div class="two">
+      <div>
+        <div class="win"><div class="t">Window 1 <i>backend + website, leave running</i></div>
+<pre>cd C:\Users\krish\OneDrive\Desktop\FlagForge
+powershell -ExecutionPolicy Bypass -File scripts\start-backend.ps1</pre></div>
+        <div class="win"><div class="t">Window 2 <i>challenge host + nc services, leave running</i></div>
+<pre>cd C:\Users\krish\OneDrive\Desktop\FlagForge
+node challenge-host/server.mjs</pre></div>
+        <div class="win"><div class="t">Window 3 <i>load demo data, run once</i></div>
+<pre>cd C:\Users\krish\OneDrive\Desktop\FlagForge
+node scripts/seed.mjs http://localhost:8080</pre></div>
+      </div>
+      <div>
+        <div class="win"><div class="t">Then open</div>
+<pre>http://localhost:8080</pre></div>
+        <div class="logins">
+          <b>Admin:</b> <code>admin</code> / <code>adminpassword</code><br>
+          <b>Player:</b> <code>nullpoin1</code> / <code>password123</code>
+        </div>
+        <div class="note">
+          Wait for Window 1 to print <code>FlagForge backend: http://localhost:8080</code> before running Window 3.<br>
+          Reset the demo: stop Window 1 (Ctrl+C), delete the <code>data\demo</code> folder, start again.<br>
+          After changing code: <code>cmake --build build -j 2</code> and <code>cd frontend; npx vite build</code>
+          (put <code>C:\msys64\ucrt64\bin</code> on PATH first).<br>
+          Try the pwn services: <code>nc localhost 9101</code> or the Terminal page.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">github.com/frrkrisn/FlagForge  ·  tests: 93 C++ cases, 14 frontend, 6 challenge-host</div>
+</body>
+</html>
