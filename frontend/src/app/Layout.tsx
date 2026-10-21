@@ -56,7 +56,7 @@ export function Layout() {
   const navigate = useNavigate();
   const [themeOpen, setThemeOpen] = useState(false);
 
-  const lightToasts = theme.preset === 'paper';
+  const lightToasts = ['paper', 'arctic', 'sakura'].includes(theme.preset);
 
   return (
     <MotionConfig reducedMotion={theme.effects.motion ? 'user' : 'always'}>

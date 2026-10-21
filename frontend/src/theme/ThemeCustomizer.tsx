@@ -4,6 +4,7 @@ import { Button, Input } from '../components/ui';
 import { cn } from '../lib/cn';
 import { ensureReadableAccent } from './contrast';
 import {
+  ACCENT_SWATCHES,
   FONT_STACKS,
   PRESETS,
   type FontChoice,
@@ -97,6 +98,19 @@ export function ThemeCustomizer({ open, onClose }: { open: boolean; onClose: () 
                   clear
                 </Button>
               )}
+            </div>
+            <div className="mt-3 grid grid-cols-8 gap-2" role="group" aria-label="Quick accent colours">
+              {ACCENT_SWATCHES.map((hex) => (
+                <button
+                  key={hex}
+                  type="button"
+                  aria-label={`Accent ${hex}`}
+                  title={hex}
+                  onClick={() => onAccentChange(hex)}
+                  className={cn('h-6 w-6 rounded-full transition-transform hover:scale-110', theme.accent === hex && 'ring-2 ring-fg ring-offset-2 ring-offset-panel')}
+                  style={{ background: hex }}
+                />
+              ))}
             </div>
             {note && <p className="mt-1 text-xs text-warning">{note}</p>}
           </section>

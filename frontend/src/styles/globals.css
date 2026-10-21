@@ -184,6 +184,196 @@
   --nm-lo: color-mix(in srgb, var(--bg) 76%, #6f6650);
 }
 
+:root[data-theme='ocean'] {
+  --bg: #050b18;
+  --panel: #091428;
+  --overlay: #0d1c38;
+  --border: #17305c;
+  --border-strong: #264a85;
+  --fg: #d6e6ff;
+  --fg-muted: #7f96b8;
+  --accent: #3b82f6;
+  --accent-fg: #02081a;
+  --accent-dim: #2563c9;
+  --selection: #0b2a5c;
+  --focus-ring: #3b82f6;
+}
+
+:root[data-theme='forest'] {
+  --bg: #060d08;
+  --panel: #0b150d;
+  --overlay: #101f13;
+  --border: #1d3a22;
+  --border-strong: #2f5a36;
+  --fg: #d9f2d0;
+  --fg-muted: #7ea083;
+  --accent: #6bcf4a;
+  --accent-fg: #07140a;
+  --accent-dim: #4a9a32;
+  --selection: #1c4a14;
+  --focus-ring: #6bcf4a;
+}
+
+:root[data-theme='sunset'] {
+  --bg: #120905;
+  --panel: #1b0e07;
+  --overlay: #24140a;
+  --border: #4a2410;
+  --border-strong: #703818;
+  --fg: #ffe3d0;
+  --fg-muted: #b08468;
+  --accent: #ff7a2f;
+  --accent-fg: #1a0a02;
+  --accent-dim: #c25a1c;
+  --selection: #5a2a08;
+  --focus-ring: #ff7a2f;
+}
+
+:root[data-theme='royal'] {
+  --bg: #0a0614;
+  --panel: #110a20;
+  --overlay: #180f2e;
+  --border: #32205a;
+  --border-strong: #4a3185;
+  --fg: #e8dcff;
+  --fg-muted: #9684b8;
+  --accent: #9b6bff;
+  --accent-fg: #0f0620;
+  --accent-dim: #7248d6;
+  --selection: #2f1a66;
+  --focus-ring: #9b6bff;
+}
+
+:root[data-theme='rose'] {
+  --bg: #140609;
+  --panel: #1d0a10;
+  --overlay: #260e17;
+  --border: #4d1a2b;
+  --border-strong: #74263f;
+  --fg: #ffdce6;
+  --fg-muted: #b07a89;
+  --accent: #ff5c8a;
+  --accent-fg: #1a0309;
+  --accent-dim: #c93d68;
+  --selection: #5c1230;
+  --focus-ring: #ff5c8a;
+}
+
+:root[data-theme='gold'] {
+  --bg: #0e0b03;
+  --panel: #171205;
+  --overlay: #1f180a;
+  --border: #43360f;
+  --border-strong: #695317;
+  --fg: #fff0bf;
+  --fg-muted: #aa9a62;
+  --accent: #ffd23f;
+  --accent-fg: #161000;
+  --accent-dim: #c9a21c;
+  --selection: #5a4608;
+  --focus-ring: #ffd23f;
+}
+
+:root[data-theme='mint'] {
+  --bg: #041110;
+  --panel: #071b19;
+  --overlay: #0b2623;
+  --border: #154a45;
+  --border-strong: #1f6e66;
+  --fg: #d2fff5;
+  --fg-muted: #72a8a0;
+  --accent: #2ee6c8;
+  --accent-fg: #021412;
+  --accent-dim: #1ba892;
+  --selection: #0a4a42;
+  --focus-ring: #2ee6c8;
+}
+
+:root[data-theme='lava'] {
+  --bg: #120504;
+  --panel: #1c0907;
+  --overlay: #260d0a;
+  --border: #4d1a12;
+  --border-strong: #74281a;
+  --fg: #ffd9cc;
+  --fg-muted: #b07868;
+  --accent: #ff4d1a;
+  --accent-fg: #180300;
+  --accent-dim: #c23510;
+  --selection: #5a1606;
+  --focus-ring: #ff4d1a;
+}
+
+:root[data-theme='arctic'] {
+  --bg: #eef4fa;
+  --panel: #f8fbff;
+  --overlay: #e3ecf5;
+  --border: #c3d3e3;
+  --border-strong: #9fb6cc;
+  --fg: #10202e;
+  --fg-muted: #4d6479;
+  --accent: #0b6bcb;
+  --accent-fg: #ffffff;
+  --accent-dim: #094f96;
+  --selection: #cfe3f7;
+  --focus-ring: #0b6bcb;
+  --success: #0a7a3d;
+  --warning: #a06600;
+  --danger: #b3261e;
+  --info: #0b5aa0;
+  --cat-web: #0b5aa0;
+  --cat-crypto: #6a3db3;
+  --cat-forensics: #a06600;
+  --cat-reverse: #b3261e;
+  --cat-pwn: #a01e6a;
+  --cat-misc: #5a6672;
+  --chart-1: #0b6bcb;
+  --chart-2: #0b5aa0;
+  --chart-3: #a06600;
+  --chart-4: #6a3db3;
+  --chart-5: #a01e6a;
+  --chart-6: #0b8a8a;
+  --glow-alpha: 0%;
+  color-scheme: light;
+  --nm-hi: #ffffff;
+  --nm-lo: color-mix(in srgb, var(--bg) 78%, #5a6672);
+}
+
+:root[data-theme='sakura'] {
+  --bg: #fbf0f3;
+  --panel: #fff8fa;
+  --overlay: #f5e3e9;
+  --border: #e6c7d2;
+  --border-strong: #cfa3b3;
+  --fg: #2a1219;
+  --fg-muted: #7d5663;
+  --accent: #c2185b;
+  --accent-fg: #ffffff;
+  --accent-dim: #8e1243;
+  --selection: #f8d0de;
+  --focus-ring: #c2185b;
+  --success: #0a7a3d;
+  --warning: #a06600;
+  --danger: #b3261e;
+  --info: #0b5aa0;
+  --cat-web: #0b5aa0;
+  --cat-crypto: #6a3db3;
+  --cat-forensics: #a06600;
+  --cat-reverse: #b3261e;
+  --cat-pwn: #a01e6a;
+  --cat-misc: #5a6672;
+  --chart-1: #c2185b;
+  --chart-2: #0b5aa0;
+  --chart-3: #a06600;
+  --chart-4: #6a3db3;
+  --chart-5: #a01e6a;
+  --chart-6: #0b8a8a;
+  --glow-alpha: 0%;
+  color-scheme: light;
+  --nm-hi: #ffffff;
+  --nm-lo: color-mix(in srgb, var(--bg) 78%, #5a6672);
+}
+
 /* Depth switch: with "Soft depth" off the relief collapses to a flat 1px outline. */
 :root[data-depth='off'] {
   --nm-raised: 0 0 0 1px var(--border);

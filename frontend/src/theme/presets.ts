@@ -9,7 +9,17 @@ export type Preset =
   | 'synthwave'
   | 'blood'
   | 'ghost'
-  | 'paper';
+  | 'paper'
+  | 'ocean'
+  | 'forest'
+  | 'sunset'
+  | 'royal'
+  | 'rose'
+  | 'gold'
+  | 'mint'
+  | 'lava'
+  | 'arctic'
+  | 'sakura';
 
 export type FontChoice = 'jetbrains' | 'fira' | 'ibm';
 export type SizeChoice = 'sm' | 'md' | 'lg';
@@ -50,6 +60,16 @@ export const PRESETS: PresetInfo[] = [
   { id: 'blood', label: 'Blood Red', note: 'Red-team look', swatch: { bg: '#0d0505', fg: '#ffd6d6', accent: '#ff3b3b' } },
   { id: 'ghost', label: 'Ghost Mono', note: 'Grayscale', swatch: { bg: '#0a0a0a', fg: '#d4d4d4', accent: '#e6e6e6' } },
   { id: 'paper', label: 'Paper', note: 'Light e-ink terminal', swatch: { bg: '#f4f1e8', fg: '#1a1a1a', accent: '#0a7a3d' }, light: true },
+  { id: 'ocean', label: 'Ocean Blue', note: 'Deep sea blue', swatch: { bg: '#050b18', fg: '#d6e6ff', accent: '#3b82f6' } },
+  { id: 'forest', label: 'Forest', note: 'Mossy woodland', swatch: { bg: '#060d08', fg: '#d9f2d0', accent: '#6bcf4a' } },
+  { id: 'sunset', label: 'Sunset Orange', note: 'Warm dusk', swatch: { bg: '#120905', fg: '#ffe3d0', accent: '#ff7a2f' } },
+  { id: 'royal', label: 'Royal Purple', note: 'Deep violet', swatch: { bg: '#0a0614', fg: '#e8dcff', accent: '#9b6bff' } },
+  { id: 'rose', label: 'Rose Pink', note: 'Soft rose', swatch: { bg: '#140609', fg: '#ffdce6', accent: '#ff5c8a' } },
+  { id: 'gold', label: 'Gold', note: 'Luxe gold', swatch: { bg: '#0e0b03', fg: '#fff0bf', accent: '#ffd23f' } },
+  { id: 'mint', label: 'Mint', note: 'Fresh teal-mint', swatch: { bg: '#041110', fg: '#d2fff5', accent: '#2ee6c8' } },
+  { id: 'lava', label: 'Lava', note: 'Molten red-orange', swatch: { bg: '#120504', fg: '#ffd9cc', accent: '#ff4d1a' } },
+  { id: 'arctic', label: 'Arctic Light', note: 'Light icy blue', swatch: { bg: '#eef4fa', fg: '#10202e', accent: '#0b6bcb' }, light: true },
+  { id: 'sakura', label: 'Sakura Light', note: 'Light blossom', swatch: { bg: '#fbf0f3', fg: '#2a1219', accent: '#c2185b' }, light: true },
 ];
 
 export const FONT_STACKS: Record<FontChoice, string> = {
@@ -75,3 +95,9 @@ export const DEFAULT_THEME: ThemeState = {
 };
 
 export const THEME_STORAGE_KEY = 'ctf.theme.v1';
+
+// One-tap accent colours shown in the theme sidebar (they go through the same WCAG readability check as the picker).
+export const ACCENT_SWATCHES = [
+  '#00ff88', '#00e5ff', '#3b82f6', '#9b6bff', '#ff2bd6', '#ff5c8a', '#ff3b3b', '#ff7a2f',
+  '#ffb000', '#ffd23f', '#a3e635', '#2ee6c8', '#38bdf8', '#f472b6', '#e6e6e6', '#fb923c',
+];
